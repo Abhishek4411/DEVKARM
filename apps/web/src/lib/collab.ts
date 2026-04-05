@@ -21,10 +21,34 @@ let _tokenRefreshInterval: ReturnType<typeof setInterval> | null = null
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+const COLLAB_URL    = 'ws://localhost:1234'
+const COLLAB_HEALTH = 'http://localhost:1234'
+
+/**
+ * Check if the HocusPocus sync server is reachable.
+ * Resolves true if the server responds within 1s, false otherwise.
+ * Used to avoid endless WebSocket retry spam when the server is offline.
+ */
+async function isSyncServerAvailable(): Promise<boolean> {
+  try {
+    await fetch(COLLAB_HEALTH, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(1000),
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * Initialize collaboration for a project.
  * Creates a Y.Doc and HocusPocus provider connected to ws://localhost:1234.
  * Document name = projectId (UUID).
+ *
+ * The provider only connects if the sync server is reachable — this prevents
+ * endless WebSocket retry spam ("WebSocket connection failed") when the server
+ * is not running during local development.
  *
  * @param token  Keycloak JWT access token. Sent to HocusPocus onAuthenticate hook.
  *               Pass undefined to connect without auth (dev only — server must have SKIP_AUTH=true).
@@ -42,13 +66,16 @@ export function initCollab(
 
   _doc = new Y.Doc()
 
+  // Start disconnected — connectCollab() will connect after a server health check.
   _provider = new HocuspocusProvider({
-    url: 'ws://localhost:1234',
+    url: COLLAB_URL,
     name: projectId,
     document: _doc,
     // Keycloak JWT — sent to server's onAuthenticate hook.
     // If undefined, the server must have SKIP_AUTH=true.
     token: token ?? '',
+    // Do not auto-connect. We will connect only after confirming the server is up.
+    connect: false,
     onConnect: () => {
       console.log(`[collab] Connected to project: ${projectId}`)
     },
@@ -64,6 +91,15 @@ export function initCollab(
   })
 
   _yFiles = _doc.getMap<Y.Map<Y.Map<string> | Y.Text>>('files')
+
+  // Async health check — connect only if server is available
+  isSyncServerAvailable().then((available) => {
+    if (!available) {
+      console.log('[collab] Sync server not available — working offline (no WebSocket)')
+      return
+    }
+    _provider?.connect()
+  })
 
   return { doc: _doc, provider: _provider, yFiles: _yFiles }
 }

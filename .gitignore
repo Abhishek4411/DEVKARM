@@ -10,6 +10,11 @@ target/
 dist/
 *.wasm
 
+# ── WASM binaries in public/ — copied from node_modules by postinstall script ──
+# Never commit these. After cloning: cd apps/web && npm install (runs copy-wasm.js automatically)
+apps/web/public/tree-sitter.wasm
+apps/web/public/tree-sitter-javascript.wasm
+
 # ── Environment / secrets ──
 .env
 apps/api/.env

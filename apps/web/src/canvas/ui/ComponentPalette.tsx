@@ -1,7 +1,7 @@
-import { FunctionSquare, Variable, Globe, GitBranch, Repeat, ShieldAlert, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FunctionSquare, Variable, Globe, GitBranch, Repeat, ShieldAlert, MessageSquare, Database, Bug, ChevronLeft, ChevronRight } from 'lucide-react'
 import './ComponentPalette.css'
 
-export type PaletteNodeType = 'functionNode' | 'variableNode' | 'apiNode' | 'conditionNode' | 'loopNode' | 'tryCatchNode' | 'commentNode' | 'packageNode'
+export type PaletteNodeType = 'functionNode' | 'variableNode' | 'apiNode' | 'conditionNode' | 'loopNode' | 'tryCatchNode' | 'commentNode' | 'packageNode' | 'databaseTableNode' | 'bugNode'
 
 const ITEMS: {
   type: PaletteNodeType
@@ -58,6 +58,20 @@ const ITEMS: {
     description: 'Canvas annotation',
     icon: <MessageSquare size={16} />,
     colorClass: 'palette-item--gray',
+  },
+  {
+    type: 'databaseTableNode',
+    label: 'DB Table',
+    description: 'Database schema table',
+    icon: <Database size={16} />,
+    colorClass: 'palette-item--cyan',
+  },
+  {
+    type: 'bugNode',
+    label: 'Bug',
+    description: 'Issue / bug tracker node',
+    icon: <Bug size={16} />,
+    colorClass: 'palette-item--red',
   },
 ]
 

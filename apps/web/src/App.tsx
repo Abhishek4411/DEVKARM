@@ -14,7 +14,13 @@ import LoopNode from './canvas/nodes/LoopNode'
 import TryCatchNode from './canvas/nodes/TryCatchNode'
 import CommentNode from './canvas/nodes/CommentNode'
 import PackageNode from './canvas/nodes/PackageNode'
-import { Settings, ChevronLeft, RefreshCw, Trash2, LogOut } from 'lucide-react'
+import DatabaseTableNode from './canvas/nodes/DatabaseTableNode'
+import BugNodeComponent from './canvas/nodes/BugNode'
+import MigrationModal from './canvas/ui/MigrationModal'
+import KanbanOverlay from './canvas/ui/KanbanOverlay'
+import Timeline from './debugger/Timeline'
+import IssuesTab from './navigator/IssuesTab'
+import { Settings, ChevronLeft, RefreshCw, Trash2, LogOut, Bug, Kanban } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { useEditorStore, runSync } from './stores/editor-store'
 import { useCanvasStore, type AppNode } from './stores/canvas-store'
@@ -37,6 +43,7 @@ import { initAwareness, updateCursor, updateViewport, updateActiveFile, onAwaren
 import { useFileStore } from './stores/file-store'
 import { checkConnection } from './canvas/sync/semantic-snap'
 import { computeAutoLayout } from './canvas/sync/auto-layout'
+import { schemaToSql } from './canvas/sync/schema-to-sql'
 import './App.css'
 
 // ── IGC → AppNode conversion ─────────────────────────────────────────────────
@@ -163,6 +170,13 @@ function makeNode(type: PaletteNodeType, position: { x: number; y: number }): Ap
   if (type === 'packageNode') {
     return { id, type, position, data: { name: 'package', version: '1.0.0', description: '' } }
   }
+  if (type === 'databaseTableNode') {
+    return { id, type, position, data: { tableName: 'new_table', columns: [] } }
+  }
+  if (type === 'bugNode') {
+    const bugId = `BUG-${Date.now() % 10000}`
+    return { id, type, position, data: { bugId, title: 'New bug', priority: 'medium' as const, assignee: '', status: 'open' as const, description: '' } }
+  }
   // apiNode
   return { id, type: 'apiNode' as const, position, data: { method: 'GET' as const, path: '/api/endpoint', status: 'idle' as const } }
 }
@@ -173,9 +187,12 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('flow')
   const [editorVisible, setEditorVisible] = useState(true)
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
-  const [sidebarTab, setSidebarTab] = useState<'components' | 'packages'>('components')
+  const [sidebarTab, setSidebarTab] = useState<'components' | 'packages' | 'issues'>('components')
   const [isDragOver, setIsDragOver] = useState(false)
+  const [kanbanOpen, setKanbanOpen] = useState(false)
   const [followingUserId, setFollowingUserId] = useState<string | null>(null)
+  const [migrationSql, setMigrationSql] = useState<string | null>(null)
+  const [debuggerOpen, setDebuggerOpen] = useState(false)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rfInstance = useRef<ReactFlowInstance<any, any> | null>(null)
@@ -373,6 +390,24 @@ export default function App() {
     if (followingUserId) setFollowingUserId(null)
   }
 
+  function handleGenerateMigration() {
+    const { nodes: currentNodes, edges: currentEdges } = useCanvasStore.getState()
+    const sql = schemaToSql(currentNodes, currentEdges)
+    setMigrationSql(sql)
+  }
+
+  /** Pan canvas to the node with the given id. */
+  function handlePanToNode(nodeId: string) {
+    if (!rfInstance.current) return
+    const targetNode = useCanvasStore.getState().nodes.find((n) => n.id === nodeId)
+    if (!targetNode) return
+    rfInstance.current.setCenter(
+      targetNode.position.x + 80,
+      targetNode.position.y + 60,
+      { duration: 500, zoom: 1.2 },
+    )
+  }
+
   function handleFileCloseOthers(keepId: string) {
     const { activeFileId: currentId } = useFileStore.getState()
     saveFileState(currentId)
@@ -414,6 +449,18 @@ export default function App() {
     window.addEventListener('keydown', onEsc)
     return () => window.removeEventListener('keydown', onEsc)
   }, [followingUserId])
+
+  // ── Ctrl+B → Kanban overlay ──────────────────────────────────────────────
+  useEffect(() => {
+    function onKanbanKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault()
+        setKanbanOpen((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKanbanKey)
+    return () => window.removeEventListener('keydown', onKanbanKey)
+  }, [])
 
   // ── Debounced auto-save (3s after last change) ───────────────────────────
   useEffect(() => {
@@ -523,6 +570,8 @@ export default function App() {
     tryCatchNode: TryCatchNode,
     commentNode: CommentNode,
     packageNode: PackageNode,
+    databaseTableNode: DatabaseTableNode,
+    bugNode: BugNodeComponent,
   }), [])
 
   const edgeTypes = useMemo(() => ({ default: AnimatedEdge }), [])
@@ -648,7 +697,26 @@ export default function App() {
         rfInstance={rfInstance.current as any} // eslint-disable-line @typescript-eslint/no-explicit-any
         onToggleEditor={() => setEditorVisible((v) => !v)}
         onAutoLayout={runAnimatedLayout}
+        onGenerateMigration={handleGenerateMigration}
+        onToggleDebugger={() => setDebuggerOpen((v) => !v)}
+        onToggleKanban={() => setKanbanOpen((v) => !v)}
       />
+
+      {/* ── SQL Migration Modal ── */}
+      {migrationSql !== null && (
+        <MigrationModal
+          sql={migrationSql}
+          onClose={() => setMigrationSql(null)}
+        />
+      )}
+
+      {/* ── Kanban Overlay ── */}
+      {kanbanOpen && (
+        <KanbanOverlay
+          onClose={() => setKanbanOpen(false)}
+          onPanToNode={handlePanToNode}
+        />
+      )}
 
       {/* ── Top Bar ── */}
       <header className="topbar">
@@ -722,6 +790,21 @@ export default function App() {
           >
             Ctrl+K
           </button>
+          <button
+            className={`topbar-icon-btn${debuggerOpen ? ' topbar-icon-btn--active' : ''}`}
+            onClick={() => setDebuggerOpen((v) => !v)}
+            title="Toggle Replay Debugger"
+          >
+            <Bug size={14} />
+          </button>
+          <button
+            className={`topbar-icon-btn${kanbanOpen ? ' topbar-icon-btn--active' : ''}`}
+            onClick={() => setKanbanOpen((v) => !v)}
+            title="Kanban Board (Ctrl+B)"
+          >
+            <Kanban size={14} />
+          </button>
+
           <Settings size={16} className="topbar-icon" />
 
           {/* User info + Sign Out */}
@@ -767,6 +850,13 @@ export default function App() {
             >
               {sidebarExpanded ? 'Packages' : '📦'}
             </button>
+            <button
+              className={`sidebar-tab${sidebarTab === 'issues' ? ' sidebar-tab--active' : ''}`}
+              onClick={() => { setSidebarTab('issues'); setSidebarExpanded(true) }}
+              title="Issues"
+            >
+              {sidebarExpanded ? 'Issues' : '🐛'}
+            </button>
           </div>
 
           {sidebarTab === 'components' ? (
@@ -774,8 +864,10 @@ export default function App() {
               expanded={sidebarExpanded}
               onToggle={() => setSidebarExpanded((v) => !v)}
             />
-          ) : (
+          ) : sidebarTab === 'packages' ? (
             <PackageSearch />
+          ) : (
+            <IssuesTab onPanToNode={handlePanToNode} />
           )}
         </div>
 
@@ -845,6 +937,7 @@ export default function App() {
                     if (n.type === 'loopNode')      return '#8B5CF6'
                     if (n.type === 'tryCatchNode')  return '#EF4444'
                     if (n.type === 'commentNode')   return '#4B5563'
+                    if (n.type === 'bugNode')       return '#EF4444'
                     return '#A78BFA'
                   }}
                   nodeStrokeWidth={0}
@@ -852,6 +945,10 @@ export default function App() {
               </ReactFlow>
             </div>
             <DescribeBar />
+            {/* ── Replay Debugger Timeline ── */}
+            {debuggerOpen && (
+              <Timeline onClose={() => setDebuggerOpen(false)} />
+            )}
           </div>
 
           {editorVisible && <div className="pane-divider" />}

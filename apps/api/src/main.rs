@@ -83,6 +83,22 @@ async fn main() {
                 .delete(routes::edges_routes::delete_all_edges),
         )
         .route("/api/edges/{id}", delete(routes::edges_routes::delete_edge))
+        // Execution Events (Replay Debugger)
+        .route(
+            "/api/projects/{id}/events",
+            get(routes::events::list_events).post(routes::events::create_event),
+        )
+        // Issues (Issue Tracking & QA)
+        .route(
+            "/api/projects/{id}/issues",
+            get(routes::issues::list_issues).post(routes::issues::create_issue),
+        )
+        .route(
+            "/api/issues/{id}",
+            get(routes::issues::get_issue)
+                .put(routes::issues::update_issue)
+                .delete(routes::issues::delete_issue),
+        )
         // Apply JWT validation middleware to all routes above
         .layer(middleware::from_fn_with_state(
             jwks_cache.clone(),

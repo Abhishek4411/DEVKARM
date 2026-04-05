@@ -205,6 +205,18 @@
   box-shadow: 0 0 0 1px #4B556320, 0 2px 12px #4B556315;
 }
 
+.palette-item--cyan {
+  border-color: #0c2030;
+}
+.palette-item--cyan .palette-item__icon {
+  color: #06B6D4;
+}
+.palette-item--cyan:hover {
+  border-color: #06B6D455;
+  background: #0a1e30;
+  box-shadow: 0 0 0 1px #06B6D420, 0 2px 12px #06B6D415;
+}
+
 .palette-item__icon {
   display: flex;
   align-items: center;

@@ -15,11 +15,15 @@ import {
   Repeat,
   ShieldAlert,
   MessageSquare,
+  Database,
   LayoutGrid,
   Trash2,
   PanelRightClose,
   RotateCcw,
   Maximize2,
+  FileCode,
+  Bug,
+  Kanban,
 } from 'lucide-react'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RFInstance = { fitView: (opts?: any) => void } | null
@@ -31,6 +35,9 @@ interface Props {
   rfInstance: RFInstance
   onToggleEditor: () => void
   onAutoLayout: () => void
+  onGenerateMigration: () => void
+  onToggleDebugger: () => void
+  onToggleKanban: () => void
 }
 
 type Command = {
@@ -41,7 +48,7 @@ type Command = {
   action: () => void
 }
 
-export default function CommandPalette({ rfInstance, onToggleEditor, onAutoLayout }: Props) {
+export default function CommandPalette({ rfInstance, onToggleEditor, onAutoLayout, onGenerateMigration, onToggleDebugger, onToggleKanban }: Props) {
   const [open, setOpen] = useState(false)
 
   const addNode = useCanvasStore((s) => s.addNode)
@@ -133,6 +140,23 @@ export default function CommandPalette({ rfInstance, onToggleEditor, onAutoLayou
       data: { text: '', width: 200 },
     }
   }
+  function mkDbTable(): AppNode {
+    return {
+      id: `db-${Date.now()}`,
+      type: 'databaseTableNode',
+      position: newPos(),
+      data: { tableName: 'new_table', columns: [] },
+    }
+  }
+  function mkBug(): AppNode {
+    const num = nodes.filter((n) => n.type === 'bugNode').length + 1
+    return {
+      id: `bug-${Date.now()}`,
+      type: 'bugNode',
+      position: newPos(),
+      data: { bugId: `BUG-${num}`, title: 'New bug', priority: 'medium' as const, assignee: '', status: 'open' as const, description: '' },
+    }
+  }
 
   const commands: Command[] = [
     {
@@ -183,6 +207,41 @@ export default function CommandPalette({ rfInstance, onToggleEditor, onAutoLayou
       group: 'Canvas',
       icon: <MessageSquare size={14} />,
       action: () => addNode(mkComment()),
+    },
+    {
+      id: 'add-db-table',
+      label: 'Add Database Table',
+      group: 'Canvas',
+      icon: <Database size={14} />,
+      action: () => addNode(mkDbTable()),
+    },
+    {
+      id: 'generate-migration',
+      label: 'Generate SQL Migration',
+      group: 'Database',
+      icon: <FileCode size={14} />,
+      action: onGenerateMigration,
+    },
+    {
+      id: 'add-bug',
+      label: 'Add Bug Node',
+      group: 'Canvas',
+      icon: <Bug size={14} />,
+      action: () => addNode(mkBug()),
+    },
+    {
+      id: 'toggle-debugger',
+      label: 'Toggle Replay Debugger',
+      group: 'Debug',
+      icon: <Bug size={14} />,
+      action: onToggleDebugger,
+    },
+    {
+      id: 'toggle-kanban',
+      label: 'Toggle Kanban Board',
+      group: 'Debug',
+      icon: <Kanban size={14} />,
+      action: onToggleKanban,
     },
     {
       id: 'auto-layout',
@@ -255,6 +314,7 @@ export default function CommandPalette({ rfInstance, onToggleEditor, onAutoLayou
         <span><kbd>↑↓</kbd> navigate</span>
         <span><kbd>↵</kbd> run</span>
         <span><kbd>Ctrl+Shift+L</kbd> auto-layout</span>
+        <span><kbd>Ctrl+B</kbd> kanban</span>
         <span><kbd>Esc</kbd> close</span>
       </div>
     </CommandDialog>

@@ -1,0 +1,93 @@
+/* ── React Flow node highlight states ── */
+
+/* Active (currently executing) — bright glow + pulsing border */
+:global([data-id].dbg-active) .react-flow__node-body,
+[data-id].dbg-active > div {
+  outline: 2px solid #A78BFA !important;
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.35), 0 0 20px rgba(167, 139, 250, 0.4) !important;
+  animation: dbg-pulse 1s ease-in-out infinite;
+}
+
+/* Completed node — green border */
+[data-id].dbg-done > div {
+  outline: 2px solid #10B981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Error node — red border */
+[data-id].dbg-error > div {
+  outline: 2px solid #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3), 0 0 16px rgba(239, 68, 68, 0.25) !important;
+}
+
+@keyframes dbg-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.35), 0 0 20px rgba(167, 139, 250, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(167, 139, 250, 0.5), 0 0 30px rgba(167, 139, 250, 0.6); }
+}
+
+/* ── Floating tooltip ── */
+.dbg-tooltip {
+  position: fixed;
+  z-index: 8000;
+  background: #0F0F1A;
+  border: 1px solid #2A2A42;
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 180px;
+  max-width: 280px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.dbg-tooltip__title {
+  font-weight: 700;
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #A78BFA;
+}
+
+.dbg-tooltip__title--error {
+  color: #F87171;
+}
+
+.dbg-tooltip__section {
+  margin-bottom: 8px;
+}
+
+.dbg-tooltip__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 3px;
+}
+
+.dbg-tooltip__json {
+  margin: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.dbg-tooltip__error {
+  font-size: 11px;
+  color: #f87171;
+  line-height: 1.5;
+}
+
+.dbg-tooltip__duration {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 4px;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+}

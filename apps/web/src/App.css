@@ -204,6 +204,12 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
+.topbar-icon-btn--active {
+  color: #A78BFA;
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
 .topbar-user {
   font-size: 11px;
   color: var(--text-secondary);
@@ -321,6 +327,7 @@
 /* Canvas pane */
 .canvas-pane {
   flex-direction: column;
+  position: relative;
 }
 
 .canvas-flow-area {

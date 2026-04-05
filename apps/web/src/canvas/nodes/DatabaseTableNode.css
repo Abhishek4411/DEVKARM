@@ -1,0 +1,311 @@
+.db-node {
+  background: #0a1628;
+  border: 1.5px solid #06B6D4;
+  border-radius: 10px;
+  width: 280px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  box-shadow: 0 2px 14px rgba(6, 182, 212, 0.12);
+  transition: box-shadow 0.15s, border-color 0.15s;
+  overflow: hidden;
+}
+
+.db-node--selected {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3), 0 2px 14px rgba(6, 182, 212, 0.2);
+}
+
+/* ── Header ── */
+.db-node__header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  background: linear-gradient(135deg, #0c2340 0%, #0a1e35 100%);
+  border-bottom: 1px solid rgba(6, 182, 212, 0.25);
+  border-top: 3px solid #06B6D4;
+  border-radius: 8px 8px 0 0;
+}
+
+.db-node__icon {
+  color: #22d3ee;
+  flex-shrink: 0;
+}
+
+.db-node__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e0f7ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Columns (view mode) ── */
+.db-node__columns {
+  padding: 4px 0;
+}
+
+.db-node__col-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 8px;
+}
+
+.db-node__col-row:last-child {
+  border-bottom: none;
+}
+
+.db-node__col-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.db-node__pk-icon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.db-node__col-name {
+  font-weight: 500;
+  color: #cbd5e1;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.db-node__col-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.db-node__col-type {
+  font-size: 10px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.db-node__empty {
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #475569;
+  text-align: center;
+}
+
+.db-node__footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 10px;
+  color: #334155;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── Constraint badges ── */
+.db-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.db-badge--fk       { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+.db-badge--not-null { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+.db-badge--unique   { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+
+/* ── Handles ── */
+.db-node__handle {
+  width: 10px;
+  height: 10px;
+  background: #06B6D4 !important;
+  border: 2px solid #0a1628 !important;
+  border-radius: 50%;
+}
+
+/* ── Edit mode ── */
+.db-node--editing {
+  background: #0a1628;
+  width: 340px;
+}
+
+.db-node__name-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 5px;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 7px;
+  outline: none;
+}
+
+.db-node__name-input:focus {
+  border-color: #06B6D4;
+  background: rgba(6, 182, 212, 0.08);
+}
+
+/* ── Column editor rows ── */
+.db-node__col-editor {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.db-col-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 5px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.db-col-row__name {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  padding: 2px 3px;
+}
+
+.db-col-row__name::placeholder { color: #475569; }
+
+.db-col-row__type {
+  background: #0d1f35;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 4px;
+  color: #94a3b8;
+  font-size: 10px;
+  padding: 2px 4px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  cursor: pointer;
+  max-width: 90px;
+}
+
+.db-col-row__constraints {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.db-constraint-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: background 0.1s, color 0.1s;
+}
+
+.db-constraint-btn:hover {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+}
+
+.db-constraint-btn--active {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #22d3ee;
+}
+
+.db-col-row__del {
+  background: transparent;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 3px;
+  transition: color 0.1s;
+  flex-shrink: 0;
+}
+
+.db-col-row__del:hover { color: #ef4444; }
+
+.db-node__add-col {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px dashed rgba(6, 182, 212, 0.3);
+  border-radius: 5px;
+  color: #22d3ee;
+  font-size: 11px;
+  padding: 5px 8px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.1s;
+  margin-top: 2px;
+}
+
+.db-node__add-col:hover {
+  background: rgba(6, 182, 212, 0.08);
+}
+
+/* ── Save / Cancel ── */
+.db-node__actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.db-node__btn {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 5px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.db-node__btn--save {
+  background: #06B6D4;
+  color: #0a1628;
+}
+
+.db-node__btn--save:hover { background: #22d3ee; }
+
+.db-node__btn--cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.db-node__btn--cancel:hover { background: rgba(255, 255, 255, 0.1); }

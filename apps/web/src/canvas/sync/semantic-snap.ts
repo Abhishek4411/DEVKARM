@@ -109,6 +109,11 @@ export function checkConnection(
     return { valid: true }
   }
 
+  // DatabaseTableNode ↔ DatabaseTableNode (FK relationship)
+  if (sourceType === 'databaseTableNode' && targetType === 'databaseTableNode') {
+    return { valid: true }
+  }
+
   // ── Everything else is invalid ─────────────────────────────────────────────
   return {
     valid: false,

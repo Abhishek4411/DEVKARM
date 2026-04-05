@@ -39,6 +39,17 @@ services:
       postgres:
         condition: service_healthy
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    environment:
+      MEILI_MASTER_KEY: devkarm_search_key
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilidata:/meili_data
+
 volumes:
   pgdata:
   redisdata:
+  meilidata:

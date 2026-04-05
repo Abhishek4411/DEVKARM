@@ -15,12 +15,13 @@ import type { ConditionNodeType } from '../canvas/nodes/ConditionNode'
 import type { LoopNodeType } from '../canvas/nodes/LoopNode'
 import type { TryCatchNodeType } from '../canvas/nodes/TryCatchNode'
 import type { CommentNodeType } from '../canvas/nodes/CommentNode'
+import type { PackageNodeType } from '../canvas/nodes/PackageNode'
 // sync-store has no local imports so it is safe to import directly (no circular dep)
 import { useSyncStore } from './sync-store'
 // collab.ts has no local imports — safe to import statically
 import { isCollabActive, getDoc, getYNodes, getYEdges } from '../lib/collab'
 
-export type AppNode = FunctionNodeType | VariableNodeType | ApiNodeType | ConditionNodeType | LoopNodeType | TryCatchNodeType | CommentNodeType
+export type AppNode = FunctionNodeType | VariableNodeType | ApiNodeType | ConditionNodeType | LoopNodeType | TryCatchNodeType | CommentNodeType | PackageNodeType
 
 // ── Lazy import for editor-store (avoids circular dep: editor-store → canvas-store) ──
 function getEditorStore() {

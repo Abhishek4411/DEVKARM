@@ -1,7 +1,7 @@
 import { FunctionSquare, Variable, Globe, GitBranch, Repeat, ShieldAlert, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react'
 import './ComponentPalette.css'
 
-export type PaletteNodeType = 'functionNode' | 'variableNode' | 'apiNode' | 'conditionNode' | 'loopNode' | 'tryCatchNode' | 'commentNode'
+export type PaletteNodeType = 'functionNode' | 'variableNode' | 'apiNode' | 'conditionNode' | 'loopNode' | 'tryCatchNode' | 'commentNode' | 'packageNode'
 
 const ITEMS: {
   type: PaletteNodeType

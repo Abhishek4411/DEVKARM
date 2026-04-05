@@ -231,7 +231,73 @@
   overflow: hidden;
 }
 
-/* Sidebar styles live in ComponentPalette.css */
+/* ── Sidebar wrapper with tabs ── */
+.sidebar-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 42px;
+  min-width: 42px;
+  background: #0d1117;
+  border-right: 1px solid var(--border);
+  transition: width 0.2s ease;
+  overflow: hidden;
+}
+
+.sidebar-wrap--expanded {
+  width: 220px;
+  min-width: 220px;
+}
+
+.sidebar-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid var(--border);
+  background: #090d14;
+  flex-shrink: 0;
+}
+
+.sidebar-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: #64748b;
+  font-size: 11px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-tab:last-child {
+  border-right: none;
+}
+
+.sidebar-tab:hover {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.sidebar-tab--active {
+  color: #14B8A6;
+  background: #0d1f1e;
+  border-bottom: 2px solid #14B8A6;
+}
+
+/* Let ComponentPalette fill its wrapper naturally */
+.sidebar-wrap .sidebar {
+  width: 100%;
+  min-width: 0;
+  border-right: none;
+  flex: 1;
+}
+
+.sidebar-wrap .sidebar--expanded {
+  width: 100%;
+  min-width: 0;
+}
 
 /* ────────────────────────────────────────────────────────────
    MAIN AREA

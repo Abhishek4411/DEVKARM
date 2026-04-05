@@ -1,0 +1,13 @@
+{
+  "name": "devkarm-indexer",
+  "version": "1.0.0",
+  "description": "npm package indexer for DEVKARM MeiliSearch",
+  "main": "index-npm.js",
+  "type": "module",
+  "scripts": {
+    "index": "node index-npm.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}

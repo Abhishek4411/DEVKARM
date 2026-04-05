@@ -13,6 +13,7 @@ import ConditionNode from './canvas/nodes/ConditionNode'
 import LoopNode from './canvas/nodes/LoopNode'
 import TryCatchNode from './canvas/nodes/TryCatchNode'
 import CommentNode from './canvas/nodes/CommentNode'
+import PackageNode from './canvas/nodes/PackageNode'
 import { Settings, ChevronLeft, RefreshCw, Trash2, LogOut } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { useEditorStore, runSync } from './stores/editor-store'
@@ -22,6 +23,7 @@ import { useUiStore } from './stores/ui-store'
 import DescribeBar from './canvas/ui/DescribeBar'
 import CommandPalette from './canvas/ui/CommandPalette'
 import ComponentPalette, { type PaletteNodeType } from './canvas/ui/ComponentPalette'
+import PackageSearch from './navigator/PackageSearch'
 import NodeContextMenu from './canvas/ui/NodeContextMenu'
 import FileTabs from './components/FileTabs'
 import ProjectSelector from './components/ProjectSelector'
@@ -158,8 +160,11 @@ function makeNode(type: PaletteNodeType, position: { x: number; y: number }): Ap
   if (type === 'commentNode') {
     return { id, type, position, data: { text: '', width: 200 } }
   }
+  if (type === 'packageNode') {
+    return { id, type, position, data: { name: 'package', version: '1.0.0', description: '' } }
+  }
   // apiNode
-  return { id, type, position, data: { method: 'GET' as const, path: '/api/endpoint', status: 'idle' as const } }
+  return { id, type: 'apiNode' as const, position, data: { method: 'GET' as const, path: '/api/endpoint', status: 'idle' as const } }
 }
 
 export default function App() {
@@ -168,6 +173,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('flow')
   const [editorVisible, setEditorVisible] = useState(true)
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
+  const [sidebarTab, setSidebarTab] = useState<'components' | 'packages'>('components')
   const [isDragOver, setIsDragOver] = useState(false)
   const [followingUserId, setFollowingUserId] = useState<string | null>(null)
 
@@ -516,6 +522,7 @@ export default function App() {
     loopNode: LoopNode,
     tryCatchNode: TryCatchNode,
     commentNode: CommentNode,
+    packageNode: PackageNode,
   }), [])
 
   const edgeTypes = useMemo(() => ({ default: AnimatedEdge }), [])
@@ -611,6 +618,21 @@ export default function App() {
       x: e.clientX,
       y: e.clientY,
     })
+
+    if (nodeType === 'packageNode') {
+      const raw = e.dataTransfer.getData('application/devkarm-package')
+      if (!raw) return
+      try {
+        const pkg = JSON.parse(raw) as { name: string; version: string; description: string }
+        addNode({
+          id: `package-${Date.now()}`,
+          type: 'packageNode',
+          position,
+          data: { name: pkg.name, version: pkg.version, description: pkg.description },
+        })
+      } catch { /* invalid JSON */ }
+      return
+    }
 
     addNode(makeNode(nodeType, position))
   }
@@ -727,11 +749,35 @@ export default function App() {
 
       {/* ── Body ── */}
       <div className="body">
-        {/* ── Left Sidebar / Component Palette ── */}
-        <ComponentPalette
-          expanded={sidebarExpanded}
-          onToggle={() => setSidebarExpanded((v) => !v)}
-        />
+        {/* ── Left Sidebar ── */}
+        <div className={`sidebar-wrap${sidebarExpanded ? ' sidebar-wrap--expanded' : ''}`}>
+          {/* Tab strip */}
+          <div className="sidebar-tabs">
+            <button
+              className={`sidebar-tab${sidebarTab === 'components' ? ' sidebar-tab--active' : ''}`}
+              onClick={() => { setSidebarTab('components'); setSidebarExpanded(true) }}
+              title="Components"
+            >
+              {sidebarExpanded ? 'Components' : '⬡'}
+            </button>
+            <button
+              className={`sidebar-tab${sidebarTab === 'packages' ? ' sidebar-tab--active' : ''}`}
+              onClick={() => { setSidebarTab('packages'); setSidebarExpanded(true) }}
+              title="Packages"
+            >
+              {sidebarExpanded ? 'Packages' : '📦'}
+            </button>
+          </div>
+
+          {sidebarTab === 'components' ? (
+            <ComponentPalette
+              expanded={sidebarExpanded}
+              onToggle={() => setSidebarExpanded((v) => !v)}
+            />
+          ) : (
+            <PackageSearch />
+          )}
+        </div>
 
         {/* ── Main Panes ── */}
         <main className="main">

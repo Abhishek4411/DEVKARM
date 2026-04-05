@@ -1,7 +1,6 @@
 /* ── React Flow node highlight states ── */
 
 /* Active (currently executing) — bright glow + pulsing border */
-:global([data-id].dbg-active) .react-flow__node-body,
 [data-id].dbg-active > div {
   outline: 2px solid #A78BFA !important;
   box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.35), 0 0 20px rgba(167, 139, 250, 0.4) !important;

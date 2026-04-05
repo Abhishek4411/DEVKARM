@@ -1,0 +1,163 @@
+/* ── Overlay backdrop ── */
+.cmdk-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 6, 10, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 200;
+  animation: cmdk-fade-in 0.12s ease;
+}
+
+/* ── Dialog container ── */
+.cmdk-content {
+  position: fixed;
+  top: 28%;
+  left: 50%;
+  transform: translate(-50%, -28%);
+  z-index: 201;
+  width: 580px;
+  max-width: calc(100vw - 48px);
+  background: #0F0F1A;
+  border: 1px solid #2A2A42;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px #A78BFA18,
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 32px 80px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: cmdk-slide-in 0.14s ease;
+  /* Remove Radix default outline */
+  outline: none;
+}
+
+@keyframes cmdk-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes cmdk-slide-in {
+  from { opacity: 0; transform: translate(-50%, -31%); }
+  to   { opacity: 1; transform: translate(-50%, -28%); }
+}
+
+/* ── Search input ── */
+.cmdk-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #1E1E2E;
+  color: #E2E2E8;
+  font-size: 15px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  padding: 17px 20px;
+  outline: none;
+  caret-color: #A78BFA;
+}
+
+.cmdk-input::placeholder {
+  color: #3A3A58;
+}
+
+/* ── Results list ── */
+.cmdk-list {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #2A2A42 transparent;
+}
+
+.cmdk-list::-webkit-scrollbar { width: 4px; }
+.cmdk-list::-webkit-scrollbar-thumb { background: #2A2A42; border-radius: 2px; }
+
+/* ── Group ── */
+.cmdk-group [cmdk-group-heading] {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3A3A58;
+  padding: 10px 10px 4px;
+  user-select: none;
+}
+
+/* ── Items ── */
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #8888A0;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  outline: none;
+}
+
+/* cmdk v1 uses aria-selected for keyboard highlight */
+.cmdk-item[aria-selected='true'] {
+  background: #1A1830;
+  color: #E2E2E8;
+}
+
+.cmdk-item[aria-selected='true'] .cmdk-item__icon {
+  border-color: #A78BFA55;
+  color: #A78BFA;
+  background: #1E1630;
+}
+
+.cmdk-item:hover {
+  background: #14142A;
+  color: #C4C4D8;
+}
+
+/* Icon chip */
+.cmdk-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: #13131E;
+  border: 1px solid #252540;
+  border-radius: 6px;
+  color: #6060A0;
+  flex-shrink: 0;
+  transition: all 0.12s ease;
+}
+
+/* Empty state */
+.cmdk-empty {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #3A3A58;
+}
+
+/* ── Footer hint bar ── */
+.cmdk-footer {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 16px;
+  border-top: 1px solid #1A1A28;
+  background: #0C0C16;
+  font-size: 11px;
+  color: #3A3A58;
+}
+
+.cmdk-footer kbd {
+  display: inline-flex;
+  align-items: center;
+  background: #181826;
+  border: 1px solid #252540;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: #6060A0;
+  margin-right: 4px;
+}

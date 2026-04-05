@@ -1,0 +1,109 @@
+@import './node-edit.css';
+
+/* ── LoopNode — purple theme ── */
+.loop-node {
+  position: relative;
+  width: 200px;
+  background: #110D1A;
+  border: 1px solid #2D1F4D;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: default;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+
+.loop-node--editing {
+  width: 240px;
+}
+
+.loop-node:hover {
+  border-color: #8B5CF6;
+  box-shadow:
+    0 0 0 1px #8B5CF625,
+    0 4px 24px #8B5CF630,
+    0 2px 12px rgba(0,0,0,0.5);
+  transform: translateY(-1px);
+}
+
+.loop-node--selected {
+  border-color: #8B5CF6;
+  box-shadow:
+    0 0 0 2px #8B5CF640,
+    0 6px 32px #8B5CF635,
+    0 2px 12px rgba(0,0,0,0.5);
+}
+
+/* Purple accent bar */
+.loop-node__bar {
+  height: 3px;
+  background: linear-gradient(90deg, #6D28D9, #8B5CF6, #A78BFA);
+  width: 100%;
+}
+
+/* Header row */
+.loop-node__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 4px;
+}
+
+.loop-node__keyword {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: #A78BFA;
+  font-family: ui-monospace, Consolas, monospace;
+  background: #1E1333;
+  border: 1px solid #3D2566;
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+.loop-node__icon {
+  color: #7C3AED;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+/* Iteration expression */
+.loop-node__expression {
+  padding: 6px 12px 12px;
+  text-align: center;
+}
+
+.loop-node__expr {
+  font-size: 11px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: #C4B5FD;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.loop-node__placeholder {
+  font-size: 11px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: #3D2566;
+  font-style: italic;
+}
+
+/* Handles */
+.loop-handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: #8B5CF6 !important;
+  border: 2px solid #110D1A !important;
+  border-radius: 50% !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  box-shadow: 0 0 6px #8B5CF660 !important;
+}
+
+.loop-handle:hover {
+  background: #A78BFA !important;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px #8B5CF6AA !important;
+}

@@ -1,0 +1,178 @@
+/* PresenceBar.css — user presence avatar bar */
+
+/* Container — flex row of avatars */
+.presence-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Wrapper for avatar + popover anchor */
+.presence-avatar-slot {
+  position: relative;
+}
+
+/* Avatar circle button */
+.presence-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.5px;
+  cursor: default;
+  transition: border-color 0.15s, transform 0.15s;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.presence-avatar:not(:disabled):hover {
+  cursor: pointer;
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Ring shown around followed user's avatar */
+.presence-avatar--followed {
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.4);
+}
+
+/* Green online indicator dot (local user only) */
+.presence-online-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border: 1.5px solid #0a0a0f;
+  border-radius: 50%;
+}
+
+/* Pulse ring (shown when following) */
+.presence-following-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid #a78bfa;
+  animation: presence-pulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes presence-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
+}
+
+/* ── Popover ── */
+.presence-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: #1a1a2e;
+  border: 1px solid #2a2a40;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.presence-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presence-popover-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.presence-popover-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.presence-popover-file {
+  font-size: 10px;
+  color: #6b7280;
+  font-family: 'Consolas', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.presence-follow-btn {
+  margin-top: 2px;
+  padding: 4px 10px;
+  background: #2d2d4e;
+  border: 1px solid #3d3d60;
+  border-radius: 5px;
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  align-self: flex-start;
+}
+
+.presence-follow-btn:hover {
+  background: #3a3a5c;
+  border-color: #a78bfa;
+}
+
+.presence-follow-btn--active {
+  background: rgba(167, 139, 250, 0.15);
+  border-color: #a78bfa;
+  color: #c4b5fd;
+}
+
+/* ── "Following…" badge ── */
+.presence-following-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 10px;
+  background: rgba(167, 139, 250, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 20px;
+  font-size: 10px;
+  color: #a78bfa;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.presence-following-stop {
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.presence-following-stop:hover {
+  opacity: 1;
+}

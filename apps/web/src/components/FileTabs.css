@@ -1,0 +1,179 @@
+/* ── File Tabs Bar ── */
+.file-tabs {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--border);
+}
+
+.file-tabs__strip {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scrollbar-width: none;
+  height: 34px;
+}
+
+.file-tabs__strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Individual Tab ── */
+.file-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px 0 9px;
+  min-width: 80px;
+  max-width: 180px;
+  height: 100%;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.file-tab:hover {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.file-tab--active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  /* Accent underline */
+  box-shadow: inset 0 -2px 0 #A78BFA;
+}
+
+.file-tab--active:hover {
+  background: var(--bg-surface);
+}
+
+/* ── Tab icon ── */
+.file-tab__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.file-tab--active .file-tab__icon {
+  color: #A78BFA;
+}
+
+/* ── Tab name ── */
+.file-tab__name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ── Rename input ── */
+.file-tab__rename-input {
+  flex: 1;
+  min-width: 0;
+  background: #0A0A12;
+  border: 1px solid #A78BFA;
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 1px 4px;
+  outline: none;
+  height: 20px;
+}
+
+/* ── Close button ── */
+.file-tab__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+  padding: 0;
+}
+
+.file-tab:hover .file-tab__close,
+.file-tab--active .file-tab__close {
+  opacity: 1;
+}
+
+.file-tab__close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+/* ── New file button ── */
+.file-tabs__new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 100%;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.file-tabs__new:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+/* ── Right-click context menu ── */
+.file-tab-menu {
+  position: fixed;
+  z-index: 9000;
+  background: var(--bg-chrome);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  padding: 4px;
+  min-width: 140px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.file-tab-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.file-tab-menu__item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.file-tab-menu__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 3px 4px;
+}

@@ -1,0 +1,23 @@
+# ── Sensitive / internal planning docs — NEVER push these ──
+DONOTPUSHTOGITHUB/
+DEVKARM_MASTERPLAN.md
+DEVKARM_ENTERPRISE_PLAYBOOK.md
+DEVKARM_PLAYBOOK_PATCHES.md
+
+# ── Build outputs ──
+node_modules/
+target/
+dist/
+*.wasm
+
+# ── Environment / secrets ──
+.env
+apps/api/.env
+apps/web/.env
+
+# ── Rust build cache ──
+apps/api/target/
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db

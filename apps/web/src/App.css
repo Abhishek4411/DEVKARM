@@ -1,0 +1,456 @@
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── App shell ── */
+.devkarm-root {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  min-width: 900px;
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+/* ────────────────────────────────────────────────────────────
+   TOP BAR
+──────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  min-height: 42px;
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--border);
+  padding: 0 14px;
+  gap: 16px;
+  user-select: none;
+  /* Subtle gradient depth */
+  background-image: linear-gradient(180deg, #10101A 0%, var(--bg-chrome) 100%);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.topbar-back:hover {
+  background: #1A1A2E;
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.topbar-logo {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: var(--accent-purple);
+  white-space: nowrap;
+  text-shadow: 0 0 20px #a78bfa55;
+}
+
+.topbar-project-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  padding-left: 4px;
+  border-left: 1px solid var(--border);
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+  background: #0A0A12;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: var(--transition);
+  flex: 1;
+  text-align: center;
+}
+
+.mode-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.mode-btn.active {
+  color: var(--accent-purple);
+  background: #1E1830;
+  box-shadow: 0 0 0 1px #a78bfa22;
+}
+
+/* ── Save status indicator ── */
+.save-status {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  transition: opacity 0.3s ease;
+}
+.save-status--unsaved { color: #6B7280; background: rgba(107,114,128,0.12); }
+.save-status--saving  { color: #F59E0B; background: rgba(245,158,11,0.12);  }
+.save-status--saved   { color: #10B981; background: rgba(16,185,129,0.12);  }
+.save-status--error   { color: #EF4444; background: rgba(239,68,68,0.12);   }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-kbd-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0A0A12;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: ui-monospace, Consolas, monospace;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  letter-spacing: 0.02em;
+}
+
+.topbar-kbd-hint:hover {
+  color: var(--accent-purple);
+  border-color: #A78BFA44;
+  background: #16122A;
+}
+
+.topbar-icon {
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 4px;
+  border-radius: 5px;
+}
+
+.topbar-icon:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.topbar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.topbar-icon-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+}
+
+.topbar-icon-btn--danger:hover {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.topbar-user {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  cursor: default;
+}
+
+.topbar-signout:hover {
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* ────────────────────────────────────────────────────────────
+   BODY
+──────────────────────────────────────────────────────────── */
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar styles live in ComponentPalette.css */
+
+/* ────────────────────────────────────────────────────────────
+   MAIN AREA
+──────────────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Panes ── */
+.pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--bg-surface);
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Canvas pane */
+.canvas-pane {
+  flex-direction: column;
+}
+
+.canvas-flow-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Editor pane — left border visually separates from canvas */
+.editor-pane {
+  border-left: 2px solid #3B82F615;
+}
+
+/* ── Toast notification ── */
+.devkarm-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1A1A2E;
+  border: 1px solid #2A2A3E;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 8px 18px;
+  z-index: 9999;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: toast-in 0.18s ease;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);   }
+}
+
+/* ── Pane divider ── */
+.pane-divider {
+  width: 3px;
+  background: var(--border);
+  cursor: col-resize;
+  transition: var(--transition);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.pane-divider::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-purple);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.pane-divider:hover::after {
+  opacity: 1;
+}
+
+/* ────────────────────────────────────────────────────────────
+   REACT FLOW OVERRIDES
+   (scoped to .canvas-flow-area so we don't affect Monaco)
+──────────────────────────────────────────────────────────── */
+
+/* Background */
+.canvas-flow-area .react-flow__background {
+  background: var(--bg-surface) !important;
+}
+
+/* Remove React Flow's default white pane background */
+.canvas-flow-area .react-flow__pane {
+  cursor: grab;
+}
+.canvas-flow-area .react-flow__pane:active {
+  cursor: grabbing;
+}
+
+/* Controls panel */
+.canvas-flow-area .react-flow__controls {
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.canvas-flow-area .react-flow__controls-button {
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.canvas-flow-area .react-flow__controls-button:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.canvas-flow-area .react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+/* MiniMap */
+.canvas-flow-area .react-flow__minimap {
+  background: var(--bg-chrome) !important;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* Attribution */
+.canvas-flow-area .react-flow__attribution {
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 9px;
+}
+
+/* Edges */
+.canvas-flow-area .react-flow__edge-path {
+  stroke: #3B82F680;
+  stroke-width: 1.5;
+}
+
+.canvas-flow-area .react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5 4;
+  animation: dash 0.8s linear infinite;
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: -9; }
+}
+
+.canvas-flow-area .react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--accent-blue);
+  stroke-width: 2;
+}
+
+/* Connection line while dragging */
+.canvas-flow-area .react-flow__connectionline {
+  stroke: var(--accent-purple);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+/* Selection box */
+.canvas-flow-area .react-flow__selection {
+  background: #a78bfa0a;
+  border: 1px solid #a78bfa55;
+}
+
+/* ────────────────────────────────────────────────────────────
+   SEMANTIC CONNECTION VALIDATION
+   React Flow applies these classes to handles during connection drag.
+──────────────────────────────────────────────────────────── */
+
+/* Valid drop target — green glow */
+.canvas-flow-area .react-flow__handle.react-flow__handle-valid {
+  background: #10B981 !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 4px #10B98140, 0 0 12px #10B98170 !important;
+  transform: scale(1.4);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* Invalid drop target — red with X-like visual */
+.canvas-flow-area .react-flow__handle.react-flow__handle-invalid {
+  background: #EF4444 !important;
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 4px #EF444440, 0 0 12px #EF444460 !important;
+  transform: scale(1.2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* ────────────────────────────────────────────────────────────
+   CONNECTION VALIDITY TOOLTIP
+──────────────────────────────────────────────────────────── */
+.conn-tooltip {
+  position: fixed;
+  z-index: 9500;
+  background: #1A0D0D;
+  border: 1px solid #EF444466;
+  border-radius: 6px;
+  color: #FCA5A5;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 280px;
+  white-space: normal;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  animation: conn-tooltip-in 0.1s ease;
+}
+
+@keyframes conn-tooltip-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

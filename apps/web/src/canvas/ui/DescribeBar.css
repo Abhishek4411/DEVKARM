@@ -1,0 +1,129 @@
+/* ── DescribeBar ── */
+.describe-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #0E0E16;
+  border-top: 1px solid #1e1e2e;
+  flex-shrink: 0;
+}
+
+.describe-bar--disabled {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #4b5563;
+  padding: 10px 12px;
+}
+
+.describe-bar--disabled code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  background: #1a1a2e;
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: #6b7280;
+}
+
+.describe-bar__icon--alert {
+  color: #4b5563;
+  flex-shrink: 0;
+}
+
+/* ── error banner ── */
+.describe-bar__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #2a0f0f;
+  border: 1px solid #4a1a1a;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  color: #f87171;
+}
+
+.describe-bar__error span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.describe-bar__error-close {
+  background: none;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── input row ── */
+.describe-bar__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.describe-bar__input {
+  flex: 1;
+  background: #111118;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  color: #e2e2f0;
+  font-size: 13px;
+  padding: 7px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.describe-bar__input::placeholder {
+  color: #3d3d5c;
+}
+
+.describe-bar__input:focus {
+  border-color: #a78bfa;
+}
+
+.describe-bar__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.describe-bar__send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: #a78bfa;
+  border: none;
+  border-radius: 6px;
+  color: #0A0A0F;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.describe-bar__send:hover:not(:disabled) {
+  background: #c4b5fd;
+}
+
+.describe-bar__send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.describe-bar__spinner {
+  animation: spin 0.8s linear infinite;
+}

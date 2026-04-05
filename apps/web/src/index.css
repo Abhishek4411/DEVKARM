@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* ── DEVKARM Design Tokens ── */
+:root {
+  --bg-root:       #0A0A0F;
+  --bg-chrome:     #0D0D14;
+  --bg-surface:    #111118;
+  --bg-node:       #13131C;
+  --bg-elevated:   #1A1A28;
+
+  --border:        #1E1E2E;
+  --border-subtle: #16161F;
+  --border-strong: #2A2A42;
+
+  --text-primary:  #E2E2E8;
+  --text-secondary:#8888A0;
+  --text-muted:    #4A4A6A;
+  --text-faint:    #2A2A42;
+
+  --accent-purple: #A78BFA;
+  --accent-blue:   #3B82F6;
+  --accent-green:  #10B981;
+  --accent-orange: #F97316;
+  --accent-red:    #EF4444;
+
+  --transition: all 0.2s ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  min-width: 900px;
+}
+
+/* Scrollbar theming for the app */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }

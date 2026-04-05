@@ -1,0 +1,10 @@
+{
+  "name": "devkarm-sync",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@hocuspocus/extension-database": "^2.15.0",
+    "@hocuspocus/server": "^2.15.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

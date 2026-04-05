@@ -1,0 +1,240 @@
+/* ── Backdrop ─────────────────────────────────────────���────────────────────── */
+.ps-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #06060A;
+  z-index: 1000;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────��────── */
+.ps-card {
+  width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #0F0F1A;
+  border: 1px solid #1E1E30;
+  border-radius: 16px;
+  padding: 36px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,0.06),
+    0 8px 32px rgba(0,0,0,0.6),
+    0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* ── Logo / tagline ──────────────────────────���──────────────────────���───────── */
+.ps-logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.ps-tagline {
+  font-size: 11px;
+  color: #4B4B6A;
+  letter-spacing: 0.05em;
+  margin-bottom: 28px;
+}
+
+/* ── Heading ────────────────────────────────────────────────���───────────────── */
+.ps-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9090B0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 12px;
+}
+
+/* ── Status / empty ─────────────────────────────────────────────────────���───── */
+.ps-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5A5A80;
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+.ps-empty {
+  font-size: 13px;
+  color: #4B4B6A;
+  padding: 8px 0 16px;
+  margin: 0;
+}
+
+.ps-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #F87171;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.18);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+/* ── Project list ───────────────────────────────────────────────────────────── */
+.ps-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ps-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ps-item:hover {
+  background: #161626;
+  border-color: #2A2A45;
+}
+
+.ps-item-icon {
+  color: #A78BFA;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ps-item-name {
+  flex: 1;
+  font-size: 14px;
+  color: #D0D0F0;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-item-type {
+  font-size: 10px;
+  color: #5A5A80;
+  background: #1A1A2E;
+  border: 1px solid #2A2A45;
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+.ps-item-date {
+  font-size: 11px;
+  color: #45455E;
+  flex-shrink: 0;
+}
+
+/* ── Create form ────────────────────────────────────────────────────────��───── */
+.ps-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.ps-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #0A0A14;
+  border: 1px solid #2A2A45;
+  border-radius: 8px;
+  color: #D0D0F0;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ps-input:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+
+.ps-input::placeholder {
+  color: #3A3A58;
+}
+
+.ps-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────�� */
+.ps-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.ps-btn--primary {
+  background: #7C3AED;
+  color: #fff;
+}
+
+.ps-btn--primary:hover:not(:disabled) {
+  background: #6D28D9;
+  box-shadow: 0 0 12px rgba(124,58,237,0.4);
+}
+
+.ps-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ps-btn--ghost {
+  background: transparent;
+  color: #7070A0;
+  border: 1px solid #2A2A45;
+}
+
+.ps-btn--ghost:hover {
+  background: #161626;
+  color: #D0D0F0;
+}
+
+.ps-btn--new {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* ── Spinner animation ──────────────────────────────��───────────────────────── */
+@keyframes ps-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.ps-spinner {
+  animation: ps-spin 0.8s linear infinite;
+}

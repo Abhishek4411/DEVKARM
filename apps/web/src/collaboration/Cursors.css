@@ -1,0 +1,45 @@
+/* Cursors.css — remote user cursor overlay */
+
+/* Full-size overlay sitting on top of canvas content, pointer-events off so
+   it never intercepts clicks or drags. */
+.cursors-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 20;
+}
+
+/* Individual cursor container — positioned via framer-motion x/y transforms */
+.remote-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Cursor SVG arrow */
+.cursor-arrow {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Name label pill below the arrow */
+.cursor-label {
+  display: inline-block;
+  color: #fff;
+  font-size: 10px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  margin-left: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.2px;
+}

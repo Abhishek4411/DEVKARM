@@ -1,0 +1,158 @@
+@import './node-edit.css';
+
+/* ── ConditionNode — amber/yellow theme ── */
+.cond-node {
+  position: relative;
+  width: 200px;
+  background: #1A1600;
+  border: 1px solid #3D2F00;
+  border-radius: 10px;
+  overflow: visible; /* allow handles to overflow bottom */
+  cursor: default;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+
+.cond-node--editing {
+  width: 240px;
+  overflow: hidden;
+}
+
+.cond-node:hover {
+  border-color: #F59E0B;
+  box-shadow:
+    0 0 0 1px #F59E0B25,
+    0 4px 24px #F59E0B30,
+    0 2px 12px rgba(0,0,0,0.5);
+  transform: translateY(-1px);
+}
+
+.cond-node--selected {
+  border-color: #F59E0B;
+  box-shadow:
+    0 0 0 2px #F59E0B40,
+    0 6px 32px #F59E0B35,
+    0 2px 12px rgba(0,0,0,0.5);
+}
+
+/* Amber accent bar */
+.cond-node__bar {
+  height: 3px;
+  background: linear-gradient(90deg, #D97706, #F59E0B, #FCD34D);
+  width: 100%;
+}
+
+/* Header row */
+.cond-node__header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px 4px;
+}
+
+.cond-node__keyword {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #F59E0B;
+  font-family: ui-monospace, Consolas, monospace;
+  background: #2A1F00;
+  border: 1px solid #4D3A00;
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+/* Condition expression */
+.cond-node__condition {
+  padding: 6px 12px 10px;
+  text-align: center;
+}
+
+.cond-node__expr {
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: #FDE68A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.cond-node__placeholder {
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: #5C4A00;
+  font-style: italic;
+}
+
+/* Branch label row */
+.cond-node__branches {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px 10px;
+  border-top: 1px solid #2A2000;
+  padding-top: 6px;
+}
+
+.cond-node__branch {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-family: ui-monospace, Consolas, monospace;
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
+.cond-node__branch--true {
+  color: #34D399;
+  background: #052015;
+  border: 1px solid #064f2a;
+}
+
+.cond-node__branch--false {
+  color: #F87171;
+  background: #200505;
+  border: 1px solid #4f0606;
+}
+
+/* ── Handles ── */
+.cond-handle {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  border: 2px solid #1A1600 !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.cond-handle--in {
+  background: #F59E0B !important;
+  box-shadow: 0 0 6px #F59E0B60 !important;
+}
+
+.cond-handle--in:hover {
+  background: #FCD34D !important;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px #F59E0BAA !important;
+}
+
+.cond-handle--true {
+  background: #34D399 !important;
+  box-shadow: 0 0 6px #34D39960 !important;
+}
+
+.cond-handle--true:hover {
+  background: #6EE7B7 !important;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px #34D399AA !important;
+}
+
+.cond-handle--false {
+  background: #F87171 !important;
+  box-shadow: 0 0 6px #F8717160 !important;
+}
+
+.cond-handle--false:hover {
+  background: #FCA5A5 !important;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px #F87171AA !important;
+}

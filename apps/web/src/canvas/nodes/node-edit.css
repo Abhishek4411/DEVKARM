@@ -1,0 +1,92 @@
+/* ── Shared inline edit form (all node types) ── */
+
+.node-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 11px 11px;
+}
+
+.node-edit-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted, #4A4A6A);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.node-edit-hint {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text-faint, #2A2A42);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.node-edit-input,
+.node-edit-textarea {
+  background: #0A0A12;
+  border: 1px solid var(--border-strong, #2A2A42);
+  border-radius: 5px;
+  color: var(--text-primary, #E2E2E8);
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  padding: 5px 8px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: var(--transition);
+}
+
+.node-edit-input:focus,
+.node-edit-textarea:focus {
+  border-color: var(--accent-purple, #A78BFA);
+  box-shadow: 0 0 0 2px #A78BFA20;
+}
+
+.node-edit-textarea {
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.5;
+}
+
+.node-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.node-edit-btn {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 0;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: var(--transition);
+}
+
+.node-edit-btn--save {
+  background: var(--accent-purple, #A78BFA);
+  color: #0A0A0F;
+}
+
+.node-edit-btn--save:hover {
+  background: #C4B5FD;
+}
+
+.node-edit-btn--cancel {
+  background: transparent;
+  color: var(--text-secondary, #8888A0);
+  border: 1px solid var(--border-strong, #2A2A42);
+}
+
+.node-edit-btn--cancel:hover {
+  background: var(--bg-elevated, #1A1A28);
+  color: var(--text-primary, #E2E2E8);
+}

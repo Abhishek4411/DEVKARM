@@ -1,0 +1,109 @@
+@import './node-edit.css';
+
+/* ── FunctionNode ── */
+.fn-node {
+  position: relative;
+  width: 220px;
+  background: #13131E;
+  border: 1px solid #252540;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: default;
+  transition: var(--transition);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+
+.fn-node--editing {
+  width: 260px;
+}
+
+.fn-node:hover {
+  border-color: #3B82F6;
+  box-shadow:
+    0 0 0 1px #3B82F625,
+    0 4px 24px #3B82F630,
+    0 2px 12px rgba(0,0,0,0.5);
+  transform: translateY(-1px);
+}
+
+.fn-node--selected {
+  border-color: #3B82F6;
+  box-shadow:
+    0 0 0 2px #3B82F640,
+    0 6px 32px #3B82F635,
+    0 2px 12px rgba(0,0,0,0.5);
+}
+
+/* Colored accent bar */
+.fn-node__bar {
+  height: 3px;
+  background: linear-gradient(90deg, #2563EB, #3B82F6, #60A5FA);
+  width: 100%;
+}
+
+/* Header */
+.fn-node__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 11px 7px;
+}
+
+.fn-node__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #E2E2F0;
+  font-family: ui-monospace, Consolas, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fn-node__return {
+  font-size: 10px;
+  font-weight: 500;
+  color: #60A5FA;
+  background: #1A2540;
+  border: 1px solid #2A3F66;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+/* Params */
+.fn-node__params {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 11px 9px;
+  border-top: 1px solid #1E1E38;
+}
+
+.fn-node__param {
+  font-size: 11px;
+  color: var(--text-secondary, #8888A0);
+  font-family: ui-monospace, Consolas, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Handles */
+.fn-handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: #3B82F6 !important;
+  border: 2px solid #13131E !important;
+  border-radius: 50% !important;
+  transition: var(--transition);
+  box-shadow: 0 0 6px #3B82F660 !important;
+}
+
+.fn-handle:hover {
+  background: #93C5FD !important;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px #3B82F6AA !important;
+}

@@ -59,12 +59,13 @@ let _localState: UserAwareness | null = null
  * Initialize awareness for the current user.
  * Must be called after initCollab().
  *
- * @param provider  The HocusPocus provider from initCollab()
+ * @param provider  The HocusPocus provider from initCollab(), or null if offline.
+ *                  When null, awareness is set up locally but nothing is broadcast.
  * @param userId    Keycloak user ID (sub claim) or generated UUID
  * @param name      Display name (Keycloak preferred_username or email)
  */
 export function initAwareness(
-  provider: HocuspocusProvider,
+  provider: HocuspocusProvider | null,
   userId: string,
   name: string,
 ): void {
@@ -79,8 +80,8 @@ export function initAwareness(
     viewport: null,
   }
 
-  // Set initial local state in Y.js awareness
-  provider.awareness?.setLocalStateField('user', _localState)
+  // Only broadcast if a provider exists (i.e. collab server is online)
+  provider?.awareness?.setLocalStateField('user', _localState)
 }
 
 /**

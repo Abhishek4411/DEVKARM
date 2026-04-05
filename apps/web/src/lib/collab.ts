@@ -8,26 +8,33 @@
  *   code:  Y.Text         (shared code string)
  *
  * This prevents User A switching tabs from wiping User B's nodes.
+ *
+ * OFFLINE MODE: If the HocusPocus sync server at ws://localhost:1234 is not
+ * running, initCollab() performs a 1-second health check first. If the server
+ * is unreachable, NO WebSocket provider is created — so there are zero retry
+ * attempts and zero console errors. The Y.Doc is still created (so local-only
+ * Y.js operations work), but collaboration is silently disabled.
  */
 
 import * as Y from 'yjs'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 
 // ── Module-level singleton state ──────────────────────────────────────────────
-let _doc: Y.Doc | null = null
+let _doc:      Y.Doc | null = null
 let _provider: HocuspocusProvider | null = null
-let _yFiles: Y.Map<Y.Map<Y.Map<string> | Y.Text>> | null = null
+let _yFiles:   Y.Map<Y.Map<Y.Map<string> | Y.Text>> | null = null
 let _tokenRefreshInterval: ReturnType<typeof setInterval> | null = null
 
-// ── Public API ────────────────────────────────────────────────────────────────
-
-const COLLAB_URL    = 'ws://localhost:1234'
+const COLLAB_WS     = 'ws://localhost:1234'
 const COLLAB_HEALTH = 'http://localhost:1234'
 
+// ── Health check ──────────────────────────────────────────────────────────────
+
 /**
- * Check if the HocusPocus sync server is reachable.
- * Resolves true if the server responds within 1s, false otherwise.
- * Used to avoid endless WebSocket retry spam when the server is offline.
+ * Returns true if the HocusPocus server responds within 1 second.
+ * Used to decide whether to create a WebSocket provider at all.
+ * If the server is down, we never create the provider — so there are no
+ * WebSocket retry loops or "WebSocket connection failed" console spam.
  */
 async function isSyncServerAvailable(): Promise<boolean> {
   try {
@@ -41,94 +48,79 @@ async function isSyncServerAvailable(): Promise<boolean> {
   }
 }
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 /**
  * Initialize collaboration for a project.
- * Creates a Y.Doc and HocusPocus provider connected to ws://localhost:1234.
- * Document name = projectId (UUID).
  *
- * The provider only connects if the sync server is reachable — this prevents
- * endless WebSocket retry spam ("WebSocket connection failed") when the server
- * is not running during local development.
+ * Always creates a Y.Doc (needed for local Y.js state even when offline).
+ * Only creates a HocusPocus provider if the sync server is reachable.
  *
- * @param token  Keycloak JWT access token. Sent to HocusPocus onAuthenticate hook.
- *               Pass undefined to connect without auth (dev only — server must have SKIP_AUTH=true).
+ * @param token  Keycloak JWT access token. Pass undefined for dev without Keycloak.
  */
 export function initCollab(
   projectId: string,
   token?: string,
 ): {
-  doc: Y.Doc
-  provider: HocuspocusProvider
-  yFiles: Y.Map<Y.Map<Y.Map<string> | Y.Text>>
+  doc:      Y.Doc
+  provider: HocuspocusProvider | null
+  yFiles:   Y.Map<Y.Map<Y.Map<string> | Y.Text>>
 } {
   // Clean up any existing session first
   destroyCollab()
 
-  _doc = new Y.Doc()
-
-  // Start disconnected — connectCollab() will connect after a server health check.
-  _provider = new HocuspocusProvider({
-    url: COLLAB_URL,
-    name: projectId,
-    document: _doc,
-    // Keycloak JWT — sent to server's onAuthenticate hook.
-    // If undefined, the server must have SKIP_AUTH=true.
-    token: token ?? '',
-    // Do not auto-connect. We will connect only after confirming the server is up.
-    connect: false,
-    onConnect: () => {
-      console.log(`[collab] Connected to project: ${projectId}`)
-    },
-    onDisconnect: () => {
-      console.log(`[collab] Disconnected from project: ${projectId}`)
-    },
-    onSynced: () => {
-      console.log(`[collab] Document synced: ${projectId}`)
-    },
-    onAuthenticationFailed: ({ reason }) => {
-      console.error(`[collab] Authentication failed: ${reason}`)
-    },
-  })
-
+  _doc    = new Y.Doc()
   _yFiles = _doc.getMap<Y.Map<Y.Map<string> | Y.Text>>('files')
 
-  // Async health check — connect only if server is available
+  // Async: health check → create provider only if server is up.
+  // We return synchronously with provider=null; callers that need the provider
+  // should use getProvider() after the async phase completes.
   isSyncServerAvailable().then((available) => {
     if (!available) {
-      console.log('[collab] Sync server not available — working offline (no WebSocket)')
+      console.log('[collab] Sync server not available — working offline (collaboration disabled)')
       return
     }
-    _provider?.connect()
+
+    // Server is up — create the provider and connect immediately.
+    _provider = new HocuspocusProvider({
+      url:      COLLAB_WS,
+      name:     projectId,
+      document: _doc!,
+      token:    token ?? '',
+      onConnect: () => {
+        console.log(`[collab] Connected — project: ${projectId}`)
+      },
+      onDisconnect: () => {
+        console.log(`[collab] Disconnected — project: ${projectId}`)
+      },
+      onSynced: () => {
+        console.log(`[collab] Synced — project: ${projectId}`)
+      },
+      onAuthenticationFailed: ({ reason }) => {
+        console.error(`[collab] Auth failed: ${reason}`)
+      },
+    })
   })
 
-  return { doc: _doc, provider: _provider, yFiles: _yFiles }
+  return { doc: _doc, provider: null, yFiles: _yFiles }
 }
 
 /**
  * Update the JWT token used by the active provider.
  * Call this when Keycloak silently refreshes the access token.
- * Takes effect on the next reconnect if the connection is currently live.
  */
 export function updateCollabToken(newToken: string): void {
   if (!_provider) return
-  // HocusPocus provider stores config on the instance — update it so any
-  // reconnect attempt (after disconnect/network drop) uses the fresh token.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(_provider as any).configuration.token = newToken
 }
 
 /**
- * Start a 4-minute interval that silently refreshes the Keycloak token and
- * updates the provider. Call after initCollab().
- *
- * @param getToken   Returns the current (possibly stale) token string
- * @param refreshFn  Calls Keycloak to refresh; returns the fresh token (or throws)
+ * Start a 4-minute interval that silently refreshes the Keycloak token.
+ * Call after initCollab() succeeds.
  */
-export function startTokenRefresh(
-  refreshFn: () => Promise<string>,
-): void {
+export function startTokenRefresh(refreshFn: () => Promise<string>): void {
   stopTokenRefresh()
-  // Refresh every 4 minutes (Keycloak default token lifetime is 5 minutes)
   _tokenRefreshInterval = setInterval(async () => {
     try {
       const freshToken = await refreshFn()
@@ -150,16 +142,11 @@ export function stopTokenRefresh(): void {
 /**
  * Get (or create) the Y.Map for a specific file.
  * Structure: { nodes: Y.Map<string>, edges: Y.Map<string>, code: Y.Text }
- *
- * Call this when:
- * - Creating a new file tab
- * - Switching to a file tab (to bind observers)
  */
 export function getFileMap(fileId: string): Y.Map<Y.Map<string> | Y.Text> {
   if (!_yFiles || !_doc) {
     throw new Error('[collab] Not initialized — call initCollab() first')
   }
-
   if (!_yFiles.has(fileId)) {
     _doc.transact(() => {
       const fileMap = new Y.Map<Y.Map<string> | Y.Text>()
@@ -169,58 +156,35 @@ export function getFileMap(fileId: string): Y.Map<Y.Map<string> | Y.Text> {
       _yFiles!.set(fileId, fileMap)
     })
   }
-
   return _yFiles.get(fileId)!
 }
 
-/**
- * Get the shared nodes map for a file.
- * Maps nodeId → JSON.stringify(AppNode)
- */
 export function getYNodes(fileId: string): Y.Map<string> {
   return getFileMap(fileId).get('nodes') as Y.Map<string>
 }
 
-/**
- * Get the shared edges map for a file.
- * Maps edgeId → JSON.stringify(Edge)
- */
 export function getYEdges(fileId: string): Y.Map<string> {
   return getFileMap(fileId).get('edges') as Y.Map<string>
 }
 
-/**
- * Get the shared code text for a file.
- */
 export function getYCode(fileId: string): Y.Text {
   return getFileMap(fileId).get('code') as Y.Text
 }
 
 /**
  * Destroy the current collab session and clean up all resources.
- * Call this when:
- * - User navigates away from a project
- * - Component unmounts
  */
 export function destroyCollab(): void {
   stopTokenRefresh()
-  try {
-    _provider?.destroy()
-  } catch {
-    // ignore errors during cleanup
-  }
-  try {
-    _doc?.destroy()
-  } catch {
-    // ignore errors during cleanup
-  }
-  _doc = null
+  try { _provider?.destroy() } catch { /* ignore */ }
+  try { _doc?.destroy() }      catch { /* ignore */ }
+  _doc      = null
   _provider = null
-  _yFiles = null
+  _yFiles   = null
 }
 
-// ── Accessor for current instances (null if not initialized) ──────────────────
-export function getDoc(): Y.Doc | null { return _doc }
-export function getProvider(): HocuspocusProvider | null { return _provider }
-export function getYFiles(): Y.Map<Y.Map<Y.Map<string> | Y.Text>> | null { return _yFiles }
+// ── Accessors ─────────────────────────────────────────────────────────────────
+export function getDoc():      Y.Doc | null                                         { return _doc }
+export function getProvider(): HocuspocusProvider | null                            { return _provider }
+export function getYFiles():   Y.Map<Y.Map<Y.Map<string> | Y.Text>> | null         { return _yFiles }
 export function isCollabActive(): boolean { return _doc !== null && _provider !== null }

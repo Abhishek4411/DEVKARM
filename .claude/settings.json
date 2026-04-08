@@ -48,7 +48,13 @@
       "Bash(MSYS_NO_PATHCONV=1 docker exec devkarm-keycloak-1 /opt/keycloak/bin/kcadm.sh create users -r devkarm -s username=testuser -s email=test@devkarm.io -s enabled=true -s 'firstName=Test' -s 'lastName=User')",
       "Bash(MSYS_NO_PATHCONV=1 docker exec devkarm-keycloak-1 /opt/keycloak/bin/kcadm.sh set-password -r devkarm --username testuser --new-password test123 --temporary false)",
       "Bash(MSYS_NO_PATHCONV=1 docker exec devkarm-keycloak-1 /opt/keycloak/bin/kcadm.sh set-password -r devkarm --username testuser --new-password test123)",
-      "Bash(MSYS_NO_PATHCONV=1 docker exec devkarm-keycloak-1 /opt/keycloak/bin/kcadm.sh get users -r devkarm -q username=testuser)"
+      "Bash(MSYS_NO_PATHCONV=1 docker exec devkarm-keycloak-1 /opt/keycloak/bin/kcadm.sh get users -r devkarm -q username=testuser)",
+      "Bash(node -e \"const p=require\\('./node_modules/cmdk/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const p=require\\('./node_modules/@radix-ui/react-dialog/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(node -e \"const l = require\\('./node_modules/lucide-react'\\); console.log\\('Kanban' in l, 'KanbanSquare' in l, 'Layout' in l\\)\")",
+      "Bash(npx vite:*)",
+      "Bash(node -e \"const c = require\\('@dnd-kit/core'\\); const keys = Object.keys\\(c\\).filter\\(k => k.toLowerCase\\(\\).includes\\('drag'\\) || k.toLowerCase\\(\\).includes\\('event'\\)\\); console.log\\(keys.join\\('\\\\n'\\)\\)\")"
     ]
   }
 }

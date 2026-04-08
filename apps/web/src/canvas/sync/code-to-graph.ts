@@ -2,9 +2,11 @@ import type { Edge } from '@xyflow/react'
 import type { Tree, Node as TSNode } from 'web-tree-sitter'
 import type { AppNode } from '../../stores/canvas-store'
 
-const X_POS = 120
-const Y_START = 50
-const Y_GAP = 150
+import { applyOrganicLayout } from './organic-layout'
+
+const X_POS = 400
+const Y_START = 300
+const Y_GAP = 0
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -194,23 +196,36 @@ export function codeToGraph(tree: Tree): { nodes: AppNode[]; edges: Edge[] } {
   }
 
   // ── edge inference: variable value references a known function name ─────────
-  for (const node of nodes) {
-    if (node.type !== 'variableNode') continue
-    const value = (node.data as { value: string }).value
+  const edgeTypes = ['default', 'straight', 'step']
+  try {
+    for (const node of nodes) {
+      if (node.type !== 'variableNode') continue
+      const value = (node.data as { value: string }).value
 
-    for (const [fnName, fnId] of functionIds) {
-      if (value.includes(fnName)) {
-        edges.push({
-          id: `e-${fnId}-${node.id}`,
-          source: fnId,
-          target: node.id,
-          // No `animated: true` — AnimatedEdge already runs the SMIL animation;
-          // adding this flag would layer React Flow's CSS dash on top.
-          style: { stroke: '#3B82F6' },
-        })
+      for (const [fnName, fnId] of functionIds) {
+        if (value.includes(fnName)) {
+          const edgeType = edgeTypes[Math.floor(Math.random() * edgeTypes.length)]
+          edges.push({
+            id: `e-${fnId}-${node.id}`,
+            source: fnId,
+            target: node.id,
+            targetHandle: 'target',
+            type: edgeType,
+            // No `animated: true` — AnimatedEdge already runs the SMIL animation;
+            // adding this flag would layer React Flow's CSS dash on top.
+            style: { stroke: '#3B82F6' },
+          })
+        }
       }
     }
+  } catch (err) {
+    console.error('[trinity-sync] Edge inference failed:', err)
   }
 
-  return { nodes, edges }
+  // ── organic layout ────────────────────────────────────────────────────────
+  const organicNodes = applyOrganicLayout(nodes, edges)
+
+  return { nodes: organicNodes, edges }
 }
+
+

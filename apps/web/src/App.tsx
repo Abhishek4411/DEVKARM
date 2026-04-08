@@ -16,11 +16,13 @@ import CommentNode from './canvas/nodes/CommentNode'
 import PackageNode from './canvas/nodes/PackageNode'
 import DatabaseTableNode from './canvas/nodes/DatabaseTableNode'
 import BugNodeComponent from './canvas/nodes/BugNode'
+import SecretNode from './canvas/nodes/SecretNode'
 import MigrationModal from './canvas/ui/MigrationModal'
 import KanbanOverlay from './canvas/ui/KanbanOverlay'
 import Timeline from './debugger/Timeline'
 import IssuesTab from './navigator/IssuesTab'
-import { Settings, ChevronLeft, RefreshCw, Trash2, LogOut, Bug, Kanban } from 'lucide-react'
+import VaultTab from './navigator/VaultTab'
+import { Settings, ChevronLeft, RefreshCw, Trash2, LogOut, Bug, Kanban, Play, Loader2, Square, Lock } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { useEditorStore, runSync } from './stores/editor-store'
 import { useCanvasStore, type AppNode } from './stores/canvas-store'
@@ -44,6 +46,7 @@ import { useFileStore } from './stores/file-store'
 import { checkConnection } from './canvas/sync/semantic-snap'
 import { computeAutoLayout } from './canvas/sync/auto-layout'
 import { schemaToSql } from './canvas/sync/schema-to-sql'
+import LivePreview from './canvas/modes/LivePreview'
 import './App.css'
 
 // ── IGC → AppNode conversion ─────────────────────────────────────────────────
@@ -100,6 +103,12 @@ function igcToAppNode(n: IGCNode): AppNode {
         text:  (n.code.text  as string) ?? '',
         width: (n.code.width as number) ?? 200,
       },
+    }
+  }
+  if (n.node_type === 'secret') {
+    return {
+      id: n.id, type: 'secretNode', position,
+      data: { keyName: (n.code.keyName as string) ?? 'API_KEY' },
     }
   }
   // default → function
@@ -187,12 +196,18 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('flow')
   const [editorVisible, setEditorVisible] = useState(true)
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
-  const [sidebarTab, setSidebarTab] = useState<'components' | 'packages' | 'issues'>('components')
+  const [sidebarTab, setSidebarTab] = useState<'components' | 'packages' | 'issues' | 'vault'>('components')
   const [isDragOver, setIsDragOver] = useState(false)
   const [kanbanOpen, setKanbanOpen] = useState(false)
   const [followingUserId, setFollowingUserId] = useState<string | null>(null)
   const [migrationSql, setMigrationSql] = useState<string | null>(null)
   const [debuggerOpen, setDebuggerOpen] = useState(false)
+  const [previewVisible, setPreviewVisible] = useState(false)
+  const [runLoading, setRunLoading] = useState(false)
+  const [previewData, setPreviewData] = useState<{ stdout: string; stderr: string; exitCode: number | null; durationMs: number | null }>({ stdout: '', stderr: '', exitCode: null, durationMs: null })
+  const [serverContainerId, setServerContainerId] = useState<string | null>(null)
+  const [serverPort, setServerPort] = useState<number | null>(null)
+
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rfInstance = useRef<ReactFlowInstance<any, any> | null>(null)
@@ -396,6 +411,56 @@ export default function App() {
     setMigrationSql(sql)
   }
 
+  async function handleRunCode() {
+    const code = useEditorStore.getState().code
+    const isServer = code.includes('Bun.serve') || code.includes('.listen(')
+    
+    setPreviewVisible(true)
+    setRunLoading(true)
+    
+    try {
+      if (isServer) {
+        const res = await fetch('http://localhost:4000/run-server', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, language: 'javascript' })
+        })
+        const data = await res.json()
+        setServerPort(data.port)
+        setServerContainerId(data.containerId)
+        setPreviewData({ stdout: 'Web server started in background.\nCheck Web View.', stderr: '', exitCode: 0, durationMs: null })
+      } else {
+        const res = await fetch('http://localhost:4000/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, language: 'javascript' })
+        })
+        const data = await res.json()
+        setPreviewData(data)
+        setServerPort(null)
+        setServerContainerId(null)
+      }
+    } catch (err) {
+      setPreviewData({ stdout: '', stderr: `Sandbox is unreachable: ${err instanceof Error ? err.message : String(err)}\n\n(Ensure Sandbox server is running)`, exitCode: -1, durationMs: 0 })
+      setServerPort(null)
+      setServerContainerId(null)
+    } finally {
+      setRunLoading(false)
+    }
+  }
+
+  async function handleStopServer() {
+    if (!serverContainerId) return
+    try {
+      await fetch(`http://localhost:4000/run-server/${serverContainerId}`, { method: 'DELETE' })
+      setServerContainerId(null)
+      setServerPort(null)
+      setPreviewData(prev => ({ ...prev, stdout: prev.stdout + '\n\n[Server Stopped]', stderr: '' }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   /** Pan canvas to the node with the given id. */
   function handlePanToNode(nodeId: string) {
     if (!rfInstance.current) return
@@ -572,6 +637,7 @@ export default function App() {
     packageNode: PackageNode,
     databaseTableNode: DatabaseTableNode,
     bugNode: BugNodeComponent,
+    secretNode: SecretNode,
   }), [])
 
   const edgeTypes = useMemo(() => ({ default: AnimatedEdge }), [])
@@ -767,6 +833,25 @@ export default function App() {
 
           {/* Canvas controls */}
           <button
+            className={`topbar-icon-btn ${runLoading ? 'topbar-icon-btn--active' : ''}`}
+            style={{ color: '#10B981' }}
+            onClick={handleRunCode}
+            title="Run code in Sandbox (Live Preview)"
+            disabled={runLoading}
+          >
+            {runLoading ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+          </button>
+          {serverContainerId && (
+            <button
+              className="topbar-icon-btn"
+              style={{ color: '#EF4444' }}
+              onClick={handleStopServer}
+              title="Stop Web Server"
+            >
+              <Square size={14} fill="currentColor" />
+            </button>
+          )}
+          <button
             className="topbar-icon-btn"
             onClick={() => runSync(useEditorStore.getState().code)}
             title="Force Sync — re-parse editor code and rebuild canvas"
@@ -857,6 +942,13 @@ export default function App() {
             >
               {sidebarExpanded ? 'Issues' : '🐛'}
             </button>
+            <button
+              className={`sidebar-tab${sidebarTab === 'vault' ? ' sidebar-tab--active' : ''}`}
+              onClick={() => { setSidebarTab('vault'); setSidebarExpanded(true) }}
+              title="Vault"
+            >
+              {sidebarExpanded ? <span style={{display: 'flex', alignItems: 'center', gap: 4}}><Lock size={14} color="#66fcf1" /> Vault</span> : <Lock size={16} color="#66fcf1" />}
+            </button>
           </div>
 
           {sidebarTab === 'components' ? (
@@ -866,6 +958,8 @@ export default function App() {
             />
           ) : sidebarTab === 'packages' ? (
             <PackageSearch />
+          ) : sidebarTab === 'vault' ? (
+            <VaultTab projectId={currentProject?.id || ''} />
           ) : (
             <IssuesTab onPanToNode={handlePanToNode} />
           )}
@@ -974,6 +1068,18 @@ export default function App() {
                 }}
               />
             </div>
+          )}
+
+          {previewVisible && <div className="pane-divider" />}
+          {previewVisible && (
+            <LivePreview
+              stdout={previewData.stdout}
+              stderr={previewData.stderr}
+              exitCode={previewData.exitCode}
+              durationMs={previewData.durationMs}
+              loading={runLoading}
+              serverUrl={serverPort ? `http://localhost:${serverPort}` : undefined}
+            />
           )}
         </main>
       </div>

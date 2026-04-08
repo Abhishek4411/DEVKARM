@@ -44,18 +44,20 @@ export default function AnimatedEdge({
       <BaseEdge
         id={pathId}
         path={edgePath}
+        interactionWidth={20}
         style={{
-          stroke: selected ? accent : `${accent}66`,
-          strokeWidth: selected ? 2.5 : 2,
+          stroke: selected ? '#EF4444' : `${accent}66`,
+          strokeWidth: selected ? 3 : 2,
           transition: 'stroke 0.2s ease, stroke-width 0.2s ease',
           ...style,
+          ...(selected && { stroke: '#EF4444' }),
           // Override store colour with semi-transparent version when not selected
           // (style.stroke is the full colour — we dim it here)
         }}
       />
 
       {/* ── Travelling dot — trail (faint, slight delay) ── */}
-      <circle r={3} fill={accent} opacity={0.25} style={{ pointerEvents: 'none' }}>
+      <circle r={selected ? 4 : 3} fill={selected ? '#EF4444' : accent} opacity={0.25} style={{ pointerEvents: 'none', transition: 'fill 0.2s ease, r 0.2s ease' }}>
         <animateMotion
           dur="2s"
           repeatCount="indefinite"
@@ -67,7 +69,7 @@ export default function AnimatedEdge({
       </circle>
 
       {/* ── Travelling dot — main ── */}
-      <circle r={4} fill={accent} opacity={0.9} style={{ pointerEvents: 'none' }}>
+      <circle r={selected ? 5 : 4} fill={selected ? '#EF4444' : accent} opacity={0.9} style={{ pointerEvents: 'none', transition: 'fill 0.2s ease, r 0.2s ease' }}>
         <animateMotion
           dur="2s"
           repeatCount="indefinite"
@@ -78,7 +80,7 @@ export default function AnimatedEdge({
       </circle>
 
       {/* ── Leading highlight (tiny, bright) ── */}
-      <circle r={2} fill="#ffffff" opacity={0.6} style={{ pointerEvents: 'none' }}>
+      <circle r={selected ? 3 : 2} fill="#ffffff" opacity={0.6} style={{ pointerEvents: 'none', transition: 'r 0.2s ease' }}>
         <animateMotion
           dur="2s"
           repeatCount="indefinite"
@@ -91,3 +93,4 @@ export default function AnimatedEdge({
     </>
   )
 }
+

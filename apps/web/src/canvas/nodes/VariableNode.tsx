@@ -82,6 +82,7 @@ function VariableNode({ id, data, selected }: NodeProps<VariableNodeType>) {
       onDoubleClick={openEdit}
       title="Double-click to edit"
     >
+      <Handle type="target" position={Position.Top} id="target" className="var-handle" />
       <div className="var-node__bar" />
       <div className="var-node__header">
         <span className="var-node__name">{name}</span>

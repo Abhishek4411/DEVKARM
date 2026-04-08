@@ -1,0 +1,142 @@
+.vault-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  background-color: #0b0c10;
+  color: #c5c6c7;
+}
+
+.vault-tab__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #1f2833;
+  margin-bottom: 12px;
+}
+
+.vault-tab__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.vault-add-btn {
+  background: transparent;
+  border: none;
+  color: #66fcf1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.vault-add-btn:hover {
+  background: rgba(102, 252, 241, 0.1);
+}
+
+.vault-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1f2833;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.vault-input, .vault-select {
+  background: #0b0c10;
+  border: 1px solid #45a29e;
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #c5c6c7;
+  font-size: 13px;
+}
+
+.vault-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.vault-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.vault-btn--primary {
+  background: #66fcf1;
+  color: #0b0c10;
+}
+.vault-btn--ghost {
+  background: transparent;
+  color: #c5c6c7;
+  border: 1px solid #45a29e;
+}
+
+.vault-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.vault-empty {
+  font-size: 12px;
+  color: #45a29e;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.vault-card {
+  background: #1f2833;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vault-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vault-card__key {
+  font-weight: 600;
+  font-size: 13px;
+  color: #66fcf1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vault-card__env {
+  font-size: 10px;
+  text-transform: uppercase;
+  background: rgba(69, 162, 158, 0.1);
+  border: 1px dashed rgba(69, 162, 158, 0.4);
+  color: #66fcf1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.vault-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  padding: 4px;
+  border-radius: 4px;
+}
+.vault-action-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}

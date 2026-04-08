@@ -99,6 +99,12 @@ async fn main() {
                 .put(routes::issues::update_issue)
                 .delete(routes::issues::delete_issue),
         )
+        // Secrets (Secret Vault)
+        .route(
+            "/api/projects/{id}/secrets",
+            get(routes::secrets::list_secrets).post(routes::secrets::create_secret),
+        )
+        .route("/api/secrets/{id}", delete(routes::secrets::delete_secret))
         // Apply JWT validation middleware to all routes above
         .layer(middleware::from_fn_with_state(
             jwks_cache.clone(),

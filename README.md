@@ -7,20 +7,13 @@ Write code and watch nodes appear. Move nodes and watch the code update. Both di
 
 ---
 
-<!-- Screenshot placeholder — replace with actual screenshot -->
-<!--
-![DEVKARM Screenshot](docs/screenshot.png)
--->
-
----
-
 ## What is DEVKARM?
 
-DEVKARM is a visual programming environment built around **Trinity Sync** — a bidirectional bridge between a Monaco code editor and a React Flow canvas. Every function, variable, and API call you write becomes a draggable node. Every node you edit, delete, or connect writes back to the code. The two views are always in sync.
+DEVKARM is an enterprise-grade visual programming environment built around **Trinity Sync** — a bidirectional bridge between a Monaco code editor and a React Flow canvas. Every function, variable, loop, try/catch, and API call you write becomes a draggable node. Every node you edit, delete, or connect writes back to the code. The two views are always in sync.
 
 ---
 
-## Quick Start
+## Quick Start (Frontend Only)
 
 ```bash
 cd apps/web
@@ -30,47 +23,49 @@ bun run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
-> **Requirements:** [Bun](https://bun.sh) v1.0+. If you don't have Bun, install it first:
-> ```bash
-> npm install -g bun
-> ```
+> **Requirements:** [Bun](https://bun.sh) v1.0+.
+
+## Starting Backend Ecosystem
+DEVKARM now includes a powerful Rust API, real-time collaboration Sync server, Sandbox execution environment, and Keycloak Auth. Run them via:
+```bash
+docker-compose up -d
+cd apps/api && cargo run
+cd services/sync && bun run server.js
+cd services/sandbox && node server.js
+```
 
 ---
 
 ## Features
 
 ### Trinity Sync
-Real-time bidirectional sync between the Monaco editor and the React Flow canvas.  
-Type code → nodes appear. Edit a node → code updates. No manual refresh needed.
+Real-time bidirectional sync between the Monaco editor and the React Flow canvas (via Web-Tree-Sitter). Type code → nodes appear. Edit a node → code updates!
 
-### Node Types
-| Node | Color | Represents |
+### Advanced Node Types
+| Node | Theme | Represents |
 |---|---|---|
 | Function | Blue | `function` declarations |
 | Variable | Green | `const` / `let` / `var` declarations |
-| API | Orange | `fetch()` / `axios` calls |
+| API | Orange | `fetch()` calls |
+| Loop | Purple | `for` / `while` / `forEach` statements |
+| Condition | Amber | `if/else` statements |
+| Try/Catch | Red | `try / catch` blocks |
+| Database Table | Cyan | Visual SQL Schema Builder |
+| Secret Vault | Cyber | Environment Variable injection |
+| Bug Tracker | Crimson | Embedded Kanban QA issues |
 
-### Animated Edges
-SVG SMIL `<animateMotion>` dots travel along bezier edges to visualize data flow direction. Zero JavaScript, zero layout dependency.
+### Live Preview Sandbox (Web View)
+Execute your canvas logic securely in ephemeral Docker containers (`node:22-alpine`) isolated from your host system. Spin up embedded Web Servers (`Bun.serve()`) and stream their interfaces dynamically right into the DEVKARM GUI.
 
-### Inline Node Editing
-Double-click any node to edit its properties directly on the canvas. Changes sync to code immediately.
+### Replay Debugger
+Travel back in time. Explore timeline scrubbing of execution events, visually mapping exactly what each node processed, the data passed, and execution durations.
 
-### Right-Click Context Menu
-Right-click any node for: Edit, Duplicate, Delete, View Code (jumps Monaco to the relevant line), Add Test (coming soon).
+### Multiplayer Collaboration
+Enabled through **HocusPocus** and **Y.js**. See cursors, active file indicators, and live multi-user editing with seamless Presence tracking. Follow along with your teammates dynamically!
 
-### Command Palette
-Press **Ctrl+K** to open the command palette. Add nodes, clear the canvas, zoom to fit, toggle the editor, reset code — all from the keyboard.
-
-### Draggable Component Palette
-Expand the left sidebar and drag Function / Variable / API nodes directly onto the canvas. Drops at the exact cursor position in flow coordinates.
-
-### AI-Powered Generation (Describe to Build)
-Type a plain-English description at the bottom of the canvas and generate nodes using Claude Haiku. Requires `VITE_ANTHROPIC_API_KEY` in `apps/web/.env`.
-
-```env
-VITE_ANTHROPIC_API_KEY=your-key-here
-```
+### Right-Click Context Menu & Palettes
+- Command Palette (`Ctrl+K`): Instantly access Layout Auto-Alignment, Schema Generation, and Canvas shortcuts.
+- Asset Palettes: Drag N' Drop ready-made structures or NPM packages via integrated MeiliSearch packaging.
 
 ---
 
@@ -78,39 +73,16 @@ VITE_ANTHROPIC_API_KEY=your-key-here
 
 | Layer | Technology |
 |---|---|
-| UI Framework | React 19 |
-| Canvas Engine | React Flow 12 (`@xyflow/react`) |
-| Code Editor | Monaco Editor (`@monaco-editor/react`) |
-| AST Parser | web-tree-sitter 0.26 + tree-sitter-javascript grammar |
+| UI Framework | React 19 + TypeScript |
+| Canvas Engine | React Flow 12 |
+| Code Editor | Monaco Editor |
+| AST Parser | web-tree-sitter 0.26 |
 | State | Zustand 5 |
-| Styling | Tailwind CSS 4 + CSS custom properties |
-| Build | Vite 8 |
-| Package Manager | Bun |
-| AI | Anthropic Claude Haiku (`claude-haiku-4-5`) |
-
----
-
-## Project Structure
-
-```
-DEVKARM/
-└── apps/
-    └── web/
-        └── src/
-            ├── canvas/
-            │   ├── edges/        AnimatedEdge (SMIL dot animation)
-            │   ├── nodes/        FunctionNode, VariableNode, ApiNode
-            │   ├── sync/         code-to-graph.ts, graph-to-code.ts
-            │   └── ui/           CommandPalette, ComponentPalette, DescribeBar, NodeContextMenu
-            ├── lib/
-            │   ├── ai.ts         Anthropic API client
-            │   └── parser.ts     web-tree-sitter singleton
-            └── stores/
-                ├── canvas-store.ts
-                ├── editor-store.ts
-                ├── sync-store.ts   sync-lock flags (prevents feedback loops)
-                └── ui-store.ts
-```
+| Styling | Tailwind CSS 4 |
+| Collaboration | Y.js + HocusPocus |
+| Sandbox Execution | Dockerode + Node.js (Alpine) |
+| Core API Backend | Rust + Axum 0.8 |
+| Database | PostgreSQL (SQLx) |
 
 ---
 
@@ -126,10 +98,6 @@ User edits a node / connects edges / deletes
   └─▶ triggerGraphToCode → graphToCode
         └─▶ setCodeSilent → Monaco editor updates (via imperative editor.setValue)
 ```
-
-Two boolean flags (`isSyncingFromCode`, `isSyncingFromGraph`) in `sync-store` prevent the two pipelines from triggering each other.
-
----
 
 ## License
 

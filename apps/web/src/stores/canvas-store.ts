@@ -18,12 +18,13 @@ import type { CommentNodeType } from '../canvas/nodes/CommentNode'
 import type { PackageNodeType } from '../canvas/nodes/PackageNode'
 import type { DatabaseTableNodeType } from '../canvas/nodes/DatabaseTableNode'
 import type { BugNodeType } from '../canvas/nodes/BugNode'
+import type { SecretNodeType } from '../canvas/nodes/SecretNode'
 // sync-store has no local imports so it is safe to import directly (no circular dep)
 import { useSyncStore } from './sync-store'
 // collab.ts has no local imports — safe to import statically
 import { isCollabActive, getDoc, getYNodes, getYEdges } from '../lib/collab'
 
-export type AppNode = FunctionNodeType | VariableNodeType | ApiNodeType | ConditionNodeType | LoopNodeType | TryCatchNodeType | CommentNodeType | PackageNodeType | DatabaseTableNodeType | BugNodeType
+export type AppNode = FunctionNodeType | VariableNodeType | ApiNodeType | ConditionNodeType | LoopNodeType | TryCatchNodeType | CommentNodeType | PackageNodeType | DatabaseTableNodeType | BugNodeType | SecretNodeType
 
 // ── Lazy import for editor-store (avoids circular dep: editor-store → canvas-store) ──
 function getEditorStore() {
@@ -160,6 +161,16 @@ function appNodeToIgc(node: AppNode) {
       graph,
       intent: {},
       code: { text: d.text, width: d.width },
+    }
+  }
+  if (node.type === 'secretNode') {
+    const d = node.data as { keyName: string }
+    return {
+      id: node.id,
+      node_type: 'secret',
+      graph,
+      intent: {},
+      code: { keyName: d.keyName },
     }
   }
   // apiNode

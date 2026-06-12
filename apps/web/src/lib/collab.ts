@@ -25,8 +25,10 @@ let _provider: HocuspocusProvider | null = null
 let _yFiles:   Y.Map<Y.Map<Y.Map<string> | Y.Text>> | null = null
 let _tokenRefreshInterval: ReturnType<typeof setInterval> | null = null
 
-const COLLAB_WS     = 'ws://localhost:1234'
-const COLLAB_HEALTH = 'http://localhost:1234'
+let _undoManager: Y.UndoManager | null = null
+
+const COLLAB_WS     = import.meta.env.VITE_SYNC_WS || 'ws://localhost:1234'
+const COLLAB_HEALTH = import.meta.env.VITE_SYNC_URL || 'http://localhost:1234'
 
 // ── Health check ──────────────────────────────────────────────────────────────
 
@@ -176,11 +178,36 @@ export function getYCode(fileId: string): Y.Text {
  */
 export function destroyCollab(): void {
   stopTokenRefresh()
+  try { _undoManager?.destroy() } catch { /* ignore */ }
   try { _provider?.destroy() } catch { /* ignore */ }
   try { _doc?.destroy() }      catch { /* ignore */ }
+  _undoManager = null
   _doc      = null
   _provider = null
   _yFiles   = null
+}
+
+// ── Undo/Redo Manager ─────────────────────────────────────────────────────────
+
+export function configureUndoManager(fileId: string): void {
+  if (!_doc || !_yFiles) return
+  if (_undoManager) _undoManager.destroy()
+  
+  const fileNodes = getYNodes(fileId)
+  const fileEdges = getYEdges(fileId)
+  const fileCode = getYCode(fileId)
+  
+  _undoManager = new Y.UndoManager([fileNodes, fileEdges, fileCode], {
+    trackedOrigins: new Set(['devkarm-local'])
+  })
+}
+
+export function triggerUndo(): void {
+  if (_undoManager) _undoManager.undo()
+}
+
+export function triggerRedo(): void {
+  if (_undoManager) _undoManager.redo()
 }
 
 // ── Accessors ─────────────────────────────────────────────────────────────────

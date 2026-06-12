@@ -1,0 +1,136 @@
+.file-region-node {
+  min-width: 500px;
+  min-height: 300px;
+  border-radius: 12px;
+  border: 2px solid var(--region-color, rgba(167, 139, 250, 0.3));
+  background: var(--region-bg, rgba(167, 139, 250, 0.04));
+  backdrop-filter: blur(4px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  pointer-events: all;
+}
+
+.file-region-node:hover {
+  border-color: var(--region-color-hover, rgba(167, 139, 250, 0.6));
+  box-shadow: 0 0 24px var(--region-glow, rgba(167, 139, 250, 0.12));
+}
+
+/* ── Header ── */
+.file-region-node__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--region-header-bg, rgba(167, 139, 250, 0.08));
+  border-bottom: 1px solid var(--region-color, rgba(167, 139, 250, 0.2));
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.file-region-node__header:hover {
+  background: var(--region-header-hover, rgba(167, 139, 250, 0.15));
+}
+
+.file-region-node__icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.file-region-node__filename {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: var(--region-text, #c4b5fd);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-region-node__badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: var(--region-badge-bg, rgba(167, 139, 250, 0.15));
+  color: var(--region-badge-text, #a78bfa);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Dependency list ── */
+.file-region-node__deps {
+  padding: 6px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.file-region-node__dep-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.file-region-node__dep-arrow {
+  color: var(--region-color, #a78bfa);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.file-region-node__dep-path {
+  color: #94a3b8;
+}
+
+/* ── Unresolved marker ── */
+.file-region-node--unresolved {
+  border-style: dashed;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.file-region-node--unresolved .file-region-node__header {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.file-region-node--unresolved .file-region-node__filename {
+  color: #f87171;
+}
+
+/* ── Drop Target (Phase 11B) ── */
+.file-region-node--drop-target {
+  border-color: var(--region-color-hover, #a78bfa);
+  box-shadow: 0 0 30px var(--region-glow, rgba(167, 139, 250, 0.4));
+  transform: scale(1.01);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-region-node__drop-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(13, 13, 20, 0.85);
+  color: var(--region-text, #c4b5fd);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px dashed var(--region-color, rgba(167, 139, 250, 0.5));
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  pointer-events: none;
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 var(--region-glow, rgba(167, 139, 250, 0.4)); }
+  70% { box-shadow: 0 0 0 10px rgba(167, 139, 250, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0); }
+}

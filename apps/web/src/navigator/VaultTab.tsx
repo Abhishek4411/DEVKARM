@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { API_BASE } from '../lib/api'
+import keycloak from '../auth/keycloak'
 import { Lock, Plus, Trash2 } from 'lucide-react'
 import './VaultTab.css'
 
@@ -30,9 +32,11 @@ export default function VaultTab({ projectId }: Props) {
 
   async function fetchSecrets() {
     try {
-      const res = await fetch(`http://localhost:3000/api/projects/${projectId}/secrets`, {
-        // Add Bearer token here if global auth context gives token, but currently local
-        headers: { 'Content-Type': 'application/json' }
+      const res = await fetch(`${API_BASE}/api/projects/${projectId}/secrets`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${keycloak.token}`,
+        }
       })
       if (res.ok) {
         const data = await res.json()
@@ -47,9 +51,12 @@ export default function VaultTab({ projectId }: Props) {
     if (!newKey.trim() || !newValue.trim() || !projectId) return
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:3000/api/projects/${projectId}/secrets`, {
+      const res = await fetch(`${API_BASE}/api/projects/${projectId}/secrets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${keycloak.token}`,
+        },
         body: JSON.stringify({ key_name: newKey, value: newValue, environment: newEnv })
       })
       if (res.ok) {
@@ -68,7 +75,10 @@ export default function VaultTab({ projectId }: Props) {
 
   async function handleDeleteSecret(id: string) {
     try {
-      const res = await fetch(`http://localhost:3000/api/secrets/${id}`, { method: 'DELETE' })
+      const res = await fetch(`${API_BASE}/api/secrets/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${keycloak.token}` },
+      })
       if (res.ok) {
         setSecrets(prev => prev.filter(s => s.id !== id))
       }

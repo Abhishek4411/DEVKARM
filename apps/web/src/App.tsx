@@ -17,12 +17,14 @@ import PackageNode from './canvas/nodes/PackageNode'
 import DatabaseTableNode from './canvas/nodes/DatabaseTableNode'
 import BugNodeComponent from './canvas/nodes/BugNode'
 import SecretNode from './canvas/nodes/SecretNode'
+import FileRegionNode from './canvas/nodes/FileRegionNode'
 import MigrationModal from './canvas/ui/MigrationModal'
 import KanbanOverlay from './canvas/ui/KanbanOverlay'
 import Timeline from './debugger/Timeline'
 import IssuesTab from './navigator/IssuesTab'
 import VaultTab from './navigator/VaultTab'
-import { Settings, ChevronLeft, RefreshCw, Trash2, LogOut, Bug, Kanban, Play, Loader2, Square, Lock } from 'lucide-react'
+import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
+import { Search, ChevronLeft, RefreshCw, Trash2, LogOut, Bug, Kanban, Play, Loader2, Square, Lock, Undo2, Redo2, Network, FolderInput } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { useEditorStore, runSync } from './stores/editor-store'
 import { useCanvasStore, type AppNode } from './stores/canvas-store'
@@ -30,16 +32,17 @@ import { useSyncStore } from './stores/sync-store'
 import { useUiStore } from './stores/ui-store'
 import DescribeBar from './canvas/ui/DescribeBar'
 import CommandPalette from './canvas/ui/CommandPalette'
-import ComponentPalette, { type PaletteNodeType } from './canvas/ui/ComponentPalette'
+import ComponentPalette from './canvas/ui/ComponentPalette'
 import PackageSearch from './navigator/PackageSearch'
 import NodeContextMenu from './canvas/ui/NodeContextMenu'
 import FileTabs from './components/FileTabs'
 import ProjectSelector from './components/ProjectSelector'
+import ImportModal from './components/ImportModal'
 import Cursors from './collaboration/Cursors'
 import PresenceBar from './collaboration/PresenceBar'
 import { attachCollabBridge, detachCollabBridge } from './collaboration/collab-bridge'
-import { fetchNodes, fetchEdges, type Project, type IGCNode, type ApiEdge } from './lib/api'
-import { initCollab, destroyCollab, startTokenRefresh } from './lib/collab'
+import { fetchNodes, fetchEdges, type Project, type IGCNode, type ApiEdge, API_BASE, SANDBOX_BASE } from './lib/api'
+import { initCollab, destroyCollab, startTokenRefresh, configureUndoManager, triggerUndo, triggerRedo } from './lib/collab'
 import keycloak from './auth/keycloak'
 import { initAwareness, updateCursor, updateViewport, updateActiveFile, onAwarenessChange, destroyAwareness } from './lib/awareness'
 import { useFileStore } from './stores/file-store'
@@ -47,6 +50,10 @@ import { checkConnection } from './canvas/sync/semantic-snap'
 import { computeAutoLayout } from './canvas/sync/auto-layout'
 import { schemaToSql } from './canvas/sync/schema-to-sql'
 import LivePreview from './canvas/modes/LivePreview'
+import { buildProjectGraph, getRegionBounds } from './canvas/sync/project-graph'
+import { detectTargetRegion, moveNodeBetweenFiles } from './canvas/sync/cross-file-move'
+import { parseCode } from './lib/parser'
+import { codeToGraph } from './canvas/sync/code-to-graph'
 import './App.css'
 
 // ── IGC → AppNode conversion ─────────────────────────────────────────────────
@@ -156,7 +163,7 @@ const MODES: { id: Mode; label: string }[] = [
 ]
 
 // Default data per node type when dropped from palette
-function makeNode(type: PaletteNodeType, position: { x: number; y: number }): AppNode {
+function makeNode(type: any, position: { x: number; y: number }): AppNode {
   const id = `${type.replace('Node', '')}-${Date.now()}`
   if (type === 'functionNode') {
     return { id, type, position, data: { name: 'newFunction', params: [], returnType: 'void', code: '// body' } }
@@ -195,10 +202,21 @@ export default function App() {
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [mode, setMode] = useState<Mode>('flow')
   const [editorVisible, setEditorVisible] = useState(true)
-  const [sidebarExpanded, setSidebarExpanded] = useState(false)
-  const [sidebarTab, setSidebarTab] = useState<'components' | 'packages' | 'issues' | 'vault'>('components')
+  const [sidebarExpanded, setSidebarExpanded] = useState(true)
   const [isDragOver, setIsDragOver] = useState(false)
   const [kanbanOpen, setKanbanOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
+
+  // Listen for navigation events from FileRegionNode
+  useEffect(() => {
+    const handleExit = (e: any) => {
+      const fileId = e.detail.fileId
+      handleFileSwitch(fileId) 
+    }
+    window.addEventListener('devkarm:exit-project-graph', handleExit as EventListener)
+    return () => window.removeEventListener('devkarm:exit-project-graph', handleExit as EventListener)
+  }, [])
+
   const [followingUserId, setFollowingUserId] = useState<string | null>(null)
   const [migrationSql, setMigrationSql] = useState<string | null>(null)
   const [debuggerOpen, setDebuggerOpen] = useState(false)
@@ -224,6 +242,10 @@ export default function App() {
 
   /** Snapshot the live canvas+editor state back into the file-store for the given file id. */
   function saveFileState(id: string) {
+    // NEVER save while in Project Graph mode — the canvas contains virtual
+    // FileRegionNodes that would corrupt the file's real node data.
+    if (useCanvasStore.getState().isProjectGraphMode) return
+
     useFileStore.getState().updateFile(id, {
       code: useEditorStore.getState().code,
       nodes: useCanvasStore.getState().nodes,
@@ -247,6 +269,16 @@ export default function App() {
   }
 
   function handleFileSwitch(newId: string) {
+    const store = useCanvasStore.getState()
+
+    // If in Project Graph mode, force exit BEFORE switching files.
+    // This prevents state corruption from saving virtual nodes.
+    if (store.isProjectGraphMode) {
+      store.setProjectGraphMode(false)
+      store.setInterFileEdges([])
+      savedFileState.current = null
+    }
+
     const currentId = useFileStore.getState().activeFileId
     if (newId === currentId) return
     saveFileState(currentId)
@@ -255,6 +287,7 @@ export default function App() {
     // Rebind Y.js bridge and awareness to the new file
     useCanvasStore.getState().setCurrentFile(newId)
     attachCollabBridge(newId)
+    configureUndoManager(newId)
     updateActiveFile(newId)
   }
 
@@ -286,6 +319,94 @@ export default function App() {
         const model = ed.getModel()
         if (model) m.editor.setModelLanguage(model, getLang(name))
       }
+    }
+  }
+
+  // ── Project Graph Mode ────────────────────────────────────────────────────
+  const isProjectGraphMode = useCanvasStore((s) => s.isProjectGraphMode)
+  const savedFileState = useRef<{ nodes: AppNode[]; edges: Edge[] } | null>(null)
+
+  function handleToggleProjectGraph() {
+    const store = useCanvasStore.getState()
+
+    if (!store.isProjectGraphMode) {
+      // ── Switching ON: save current file state, build unified graph ──
+      const currentFileId = useFileStore.getState().activeFileId
+      saveFileState(currentFileId)
+
+      // Build the unified project graph from ALL files
+      const files = useFileStore.getState().files
+      const result = buildProjectGraph(files)
+
+      store.loadCanvas(result.nodes, result.edges)
+      store.setInterFileEdges(result.interFileEdges)
+      store.setProjectGraphMode(true)
+    } else {
+      // ── Switching OFF: ALWAYS restore from file-store (single source of truth) ──
+      store.setProjectGraphMode(false)
+      store.setInterFileEdges([])
+      savedFileState.current = null
+
+      // Load the active file's clean state from the file-store
+      const file = useFileStore.getState().getActiveFile()
+      if (file) {
+        store.loadCanvas(file.nodes, file.edges)
+        useEditorStore.getState().setCodeSilent(file.code)
+      }
+    }
+  }
+
+  async function handleImportCodebase(type: 'local' | 'github', payload: string) {
+    if (!currentProject) return
+    setIsImportOpen(false)
+    setRunLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/projects/${currentProject.id}/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${keycloak.token}`
+        },
+        body: JSON.stringify({ import_type: type, payload })
+      })
+      if (!res.ok) {
+        const err = await res.text()
+        throw new Error(err)
+      }
+      const data = await res.json()
+      
+      const newFiles = []
+      
+      for (const file of data.files) {
+        const id = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const tree = parseCode(file.content)
+        const graph = codeToGraph(tree)
+        newFiles.push({
+          id,
+          name: file.path,
+          code: file.content,
+          nodes: graph.nodes,
+          edges: graph.edges,
+          fileDependencies: graph.fileDependencies
+        })
+      }
+      
+      if (newFiles.length > 0) {
+        useFileStore.getState().bulkLoadFiles(newFiles)
+        
+        const store = useCanvasStore.getState()
+        const projectFiles = useFileStore.getState().files
+        const result = buildProjectGraph(projectFiles)
+        store.loadCanvas(result.nodes, result.edges)
+        store.setInterFileEdges(result.interFileEdges)
+        store.setProjectGraphMode(true)
+      } else {
+        alert("No valid source files found.")
+      }
+    } catch (e: any) {
+      alert(`Import failed: ${e.message}`)
+    } finally {
+      setRunLoading(false)
     }
   }
 
@@ -412,28 +533,38 @@ export default function App() {
   }
 
   async function handleRunCode() {
+    // Save the current editor state to the file-store so all files are up-to-date
+    const currentFileId = useFileStore.getState().activeFileId
+    saveFileState(currentFileId)
+
+    const allFiles = useFileStore.getState().files
+    const activeFile = allFiles.find((f) => f.id === currentFileId)
+    const entrypoint = activeFile?.name ?? 'main.js'
     const code = useEditorStore.getState().code
     const isServer = code.includes('Bun.serve') || code.includes('.listen(')
     
     setPreviewVisible(true)
     setRunLoading(true)
     
+    // Build the multi-file payload
+    const filesPayload = allFiles.map((f) => ({ name: f.name, code: f.code }))
+    
     try {
       if (isServer) {
-        const res = await fetch('http://localhost:4000/run-server', {
+        const res = await fetch(`${SANDBOX_BASE}/run-server`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, language: 'javascript' })
+          body: JSON.stringify({ files: filesPayload, entrypoint, language: 'javascript' })
         })
         const data = await res.json()
         setServerPort(data.port)
         setServerContainerId(data.containerId)
         setPreviewData({ stdout: 'Web server started in background.\nCheck Web View.', stderr: '', exitCode: 0, durationMs: null })
       } else {
-        const res = await fetch('http://localhost:4000/run', {
+        const res = await fetch(`${SANDBOX_BASE}/run`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, language: 'javascript' })
+          body: JSON.stringify({ files: filesPayload, entrypoint, language: 'javascript' })
         })
         const data = await res.json()
         setPreviewData(data)
@@ -452,7 +583,7 @@ export default function App() {
   async function handleStopServer() {
     if (!serverContainerId) return
     try {
-      await fetch(`http://localhost:4000/run-server/${serverContainerId}`, { method: 'DELETE' })
+      await fetch(`${SANDBOX_BASE}/run-server/${serverContainerId}`, { method: 'DELETE' })
       setServerContainerId(null)
       setServerPort(null)
       setPreviewData(prev => ({ ...prev, stdout: prev.stdout + '\n\n[Server Stopped]', stderr: '' }))
@@ -529,7 +660,7 @@ export default function App() {
 
   // ── Debounced auto-save (3s after last change) ───────────────────────────
   useEffect(() => {
-    if (!dirty || !currentProject) return
+    if (!dirty || !currentProject || isProjectGraphMode) return
     setSaveStatus('unsaved')
     const timer = setTimeout(async () => {
       setSaveStatus('saving')
@@ -562,7 +693,27 @@ export default function App() {
 
   const handleEditorMount: OnMount = (ed) => { editorRef.current = ed }
 
-  // ── Context menu actions ─────────────────────────────────────────────────
+  // ── Global Event Listeners ───────────────────────────────────────────────
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        triggerUndo()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault()
+        triggerRedo()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        triggerRedo()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  // ── Connection Validation ─────────────────────────────────────────────────
   function closeContextMenu() { setContextMenu(null) }
 
   function ctxEdit() {
@@ -638,6 +789,7 @@ export default function App() {
     databaseTableNode: DatabaseTableNode,
     bugNode: BugNodeComponent,
     secretNode: SecretNode,
+    fileRegionNode: FileRegionNode,
   }), [])
 
   const edgeTypes = useMemo(() => ({ default: AnimatedEdge }), [])
@@ -725,7 +877,7 @@ export default function App() {
     e.preventDefault()
     setIsDragOver(false)
 
-    const nodeType = e.dataTransfer.getData('application/devkarm-node-type') as PaletteNodeType
+    const nodeType = e.dataTransfer.getData('application/devkarm-node-type')
     if (!nodeType || !rfInstance.current) return
 
     // Convert screen coords → flow coords
@@ -833,6 +985,15 @@ export default function App() {
 
           {/* Canvas controls */}
           <button
+            className="topbar-icon-btn"
+            style={{ color: '#FCD34D' }}
+            onClick={() => setIsImportOpen(true)}
+            title="Import Project Folder or GitHub Repo"
+          >
+            <FolderInput size={14} />
+          </button>
+
+          <button
             className={`topbar-icon-btn ${runLoading ? 'topbar-icon-btn--active' : ''}`}
             style={{ color: '#10B981' }}
             onClick={handleRunCode}
@@ -853,6 +1014,20 @@ export default function App() {
           )}
           <button
             className="topbar-icon-btn"
+            onClick={() => triggerUndo()}
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={14} />
+          </button>
+          <button
+            className="topbar-icon-btn"
+            onClick={() => triggerRedo()}
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 size={14} />
+          </button>
+          <button
+            className="topbar-icon-btn"
             onClick={() => runSync(useEditorStore.getState().code)}
             title="Force Sync — re-parse editor code and rebuild canvas"
           >
@@ -867,13 +1042,13 @@ export default function App() {
           </button>
 
           <button
-            className="topbar-kbd-hint"
+            className="topbar-icon-btn"
             onClick={() => window.dispatchEvent(
               new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })
             )}
             title="Command Palette (Ctrl+K)"
           >
-            Ctrl+K
+            <Search size={14} />
           </button>
           <button
             className={`topbar-icon-btn${debuggerOpen ? ' topbar-icon-btn--active' : ''}`}
@@ -890,7 +1065,14 @@ export default function App() {
             <Kanban size={14} />
           </button>
 
-          <Settings size={16} className="topbar-icon" />
+          <button
+            className={`topbar-icon-btn${isProjectGraphMode ? ' topbar-icon-btn--active' : ''}`}
+            onClick={handleToggleProjectGraph}
+            title={isProjectGraphMode ? 'Exit Project Graph' : 'Project Graph (Multi-File View)'}
+            style={isProjectGraphMode ? { color: '#A78BFA' } : undefined}
+          >
+            <Network size={14} />
+          </button>
 
           {/* User info + Sign Out */}
           <span className="topbar-user" title={authEmail}>
@@ -919,57 +1101,85 @@ export default function App() {
       <div className="body">
         {/* ── Left Sidebar ── */}
         <div className={`sidebar-wrap${sidebarExpanded ? ' sidebar-wrap--expanded' : ''}`}>
-          {/* Tab strip */}
-          <div className="sidebar-tabs">
+          {/* Collapse arrow — only visible when expanded */}
+          {sidebarExpanded && (
             <button
-              className={`sidebar-tab${sidebarTab === 'components' ? ' sidebar-tab--active' : ''}`}
-              onClick={() => { setSidebarTab('components'); setSidebarExpanded(true) }}
-              title="Components"
+              className="sidebar-toggle-btn"
+              onClick={() => setSidebarExpanded(false)}
+              title="Collapse sidebar"
             >
-              {sidebarExpanded ? 'Components' : '⬡'}
+              <ChevronLeft size={14} />
             </button>
-            <button
-              className={`sidebar-tab${sidebarTab === 'packages' ? ' sidebar-tab--active' : ''}`}
-              onClick={() => { setSidebarTab('packages'); setSidebarExpanded(true) }}
-              title="Packages"
-            >
-              {sidebarExpanded ? 'Packages' : '📦'}
-            </button>
-            <button
-              className={`sidebar-tab${sidebarTab === 'issues' ? ' sidebar-tab--active' : ''}`}
-              onClick={() => { setSidebarTab('issues'); setSidebarExpanded(true) }}
-              title="Issues"
-            >
-              {sidebarExpanded ? 'Issues' : '🐛'}
-            </button>
-            <button
-              className={`sidebar-tab${sidebarTab === 'vault' ? ' sidebar-tab--active' : ''}`}
-              onClick={() => { setSidebarTab('vault'); setSidebarExpanded(true) }}
-              title="Vault"
-            >
-              {sidebarExpanded ? <span style={{display: 'flex', alignItems: 'center', gap: 4}}><Lock size={14} color="#66fcf1" /> Vault</span> : <Lock size={16} color="#66fcf1" />}
-            </button>
-          </div>
-
-          {sidebarTab === 'components' ? (
-            <ComponentPalette
-              expanded={sidebarExpanded}
-              onToggle={() => setSidebarExpanded((v) => !v)}
-            />
-          ) : sidebarTab === 'packages' ? (
-            <PackageSearch />
-          ) : sidebarTab === 'vault' ? (
-            <VaultTab projectId={currentProject?.id || ''} />
-          ) : (
-            <IssuesTab onPanToNode={handlePanToNode} />
           )}
+
+          <div className="sidebar-scrollable-content">
+            {/* ── Components Section ── */}
+            <div className="sidebar-section">
+              {sidebarExpanded ? (
+                <>
+                  <div className="sidebar-section-header">⬡ Components</div>
+                  <div className="sidebar-section-content">
+                    <ComponentPalette expanded={true} />
+                  </div>
+                </>
+              ) : (
+                <div className="sidebar-icon-row" title="Components" onClick={() => setSidebarExpanded(true)}>⬡</div>
+              )}
+            </div>
+
+            {/* ── Packages Section ── */}
+            <div className="sidebar-section">
+              {sidebarExpanded ? (
+                <>
+                  <div className="sidebar-section-header">📦 Packages</div>
+                  <div className="sidebar-section-content">
+                    <PackageSearch />
+                  </div>
+                </>
+              ) : (
+                <div className="sidebar-icon-row" title="Packages" onClick={() => setSidebarExpanded(true)}>📦</div>
+              )}
+            </div>
+
+            {/* ── Vault Section ── */}
+            <div className="sidebar-section">
+              {sidebarExpanded ? (
+                <>
+                  <div className="sidebar-section-header"><Lock size={12} color="#66fcf1" style={{ marginRight: 6 }} /> Vault</div>
+                  <div className="sidebar-section-content">
+                    <VaultTab projectId={currentProject?.id || ''} />
+                  </div>
+                </>
+              ) : (
+                <div className="sidebar-icon-row" title="Vault" onClick={() => setSidebarExpanded(true)}><Lock size={14} color="#66fcf1" /></div>
+              )}
+            </div>
+
+            {/* ── Issues Section ── */}
+            <div className="sidebar-section">
+              {sidebarExpanded ? (
+                <>
+                  <div className="sidebar-section-header">🐛 Issues</div>
+                  <div className="sidebar-section-content">
+                    <IssuesTab onPanToNode={handlePanToNode} />
+                  </div>
+                </>
+              ) : (
+                <div className="sidebar-icon-row" title="Issues" onClick={() => setSidebarExpanded(true)}>🐛</div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Main Panes ── */}
-        <main className="main">
-          {/* Canvas Pane */}
-          <div
+        <div className="main-pane-area">
+          <main className="main" style={{ width: '100%', height: '100%' }}>
+            <PanelGroup orientation="horizontal">
+              <Panel defaultSize={isProjectGraphMode ? 100 : 50} minSize={30}>
+                {/* Canvas Pane */}
+                <div
             className={`pane canvas-pane${isDragOver ? ' canvas-pane--drag-over' : ''}`}
+            style={{ width: '100%', height: '100%' }}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
@@ -987,7 +1197,46 @@ export default function App() {
                 onConnect={onConnect}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
+                deleteKeyCode={['Backspace', 'Delete']}
+                onPaneClick={() => setContextMenu(null)}
+                onEdgeDoubleClick={(_evt, edge) => {
+                  if (useCanvasStore.getState().isProjectGraphMode) return;
+                  useCanvasStore.getState().onEdgesChange([{ type: 'remove', id: edge.id }]);
+                  setTimeout(() => useCanvasStore.getState().triggerGraphToCode(), 50);
+                }}
                 connectionLineStyle={{ stroke: '#3B82F6', strokeWidth: 2, strokeDasharray: '6 3' }}
+                onNodeDragStop={(_e, node) => {
+                  const store = useCanvasStore.getState()
+                  if (!store.isProjectGraphMode) return
+
+                  if (!['functionNode', 'variableNode', 'conditionNode'].includes(node.type ?? '')) return
+
+                  const sourceFileId = node.id.split('__')[0]
+                  if (!sourceFileId || !sourceFileId.startsWith('file-')) return
+
+                  const allFiles = useFileStore.getState().files
+                  const regions = getRegionBounds(allFiles)
+                  
+                  const x = node.positionAbsolute?.x ?? node.position.x
+                  const y = node.positionAbsolute?.y ?? node.position.y
+
+                  const targetFileId = detectTargetRegion(x, y, regions, sourceFileId)
+
+                  if (targetFileId) {
+                    const originalNodeId = node.id.substring(sourceFileId.length + 2)
+                    moveNodeBetweenFiles(originalNodeId, sourceFileId, targetFileId).then(() => {
+                      const newFiles = useFileStore.getState().files
+                      const result = buildProjectGraph(newFiles)
+                      store.loadCanvas(result.nodes, result.edges)
+                      store.setInterFileEdges(result.interFileEdges)
+                    })
+                  } else {
+                    // Revert position if dropped outside
+                    const result = buildProjectGraph(useFileStore.getState().files)
+                    store.loadCanvas(result.nodes, result.edges)
+                    store.setInterFileEdges(result.interFileEdges)
+                  }
+                }}
                 onMoveEnd={(_event, viewport) => updateViewport(viewport)}
                 onInit={(instance) => { rfInstance.current = instance }}
                 onNodeContextMenu={(e, node) => {
@@ -1003,6 +1252,7 @@ export default function App() {
                 // Keyboard Delete/Backspace: React Flow has already applied the
                 // removal via onNodesChange; now regenerate the editor code.
                 onDelete={({ nodes: dn, edges: de }) => {
+                  if (useCanvasStore.getState().isProjectGraphMode) return;
                   if (dn.length > 0 || de.length > 0) {
                     // Small delay lets React Flow finish flushing the deletion.
                     setTimeout(() => useCanvasStore.getState().triggerGraphToCode(), 50)
@@ -1043,45 +1293,60 @@ export default function App() {
             {debuggerOpen && (
               <Timeline onClose={() => setDebuggerOpen(false)} />
             )}
-          </div>
-
-          {editorVisible && <div className="pane-divider" />}
-
-          {editorVisible && (
-            <div className="pane editor-pane">
-              <MonacoEditor
-                height="100%"
-                language={getLang(activeFileName)}
-                theme="vs-dark"
-                defaultValue={storeCode}
-                onMount={handleEditorMount}
-                onChange={handleCodeChange}
-                options={{
-                  fontSize: 14,
-                  minimap: { enabled: false },
-                  padding: { top: 16 },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  lineNumbers: 'on',
-                  renderWhitespace: 'none',
-                  tabSize: 2,
-                }}
-              />
             </div>
-          )}
+            </Panel>
 
-          {previewVisible && <div className="pane-divider" />}
-          {previewVisible && (
-            <LivePreview
-              stdout={previewData.stdout}
-              stderr={previewData.stderr}
-              exitCode={previewData.exitCode}
-              durationMs={previewData.durationMs}
-              loading={runLoading}
-              serverUrl={serverPort ? `http://localhost:${serverPort}` : undefined}
-            />
-          )}
-        </main>
+            {!isProjectGraphMode && (editorVisible || previewVisible) && <PanelResizeHandle className="panel-resize-handle" />}
+
+            {!isProjectGraphMode && (editorVisible || previewVisible) && (
+              <Panel defaultSize={50} minSize={20}>
+                <PanelGroup orientation="vertical">
+                  {editorVisible && (
+                    <Panel minSize={20}>
+                      <div className="pane editor-pane" style={{ width: '100%', height: '100%', borderLeft: 'none' }}>
+                        <MonacoEditor
+                          height="100%"
+                          language={getLang(activeFileName)}
+                          theme="vs-dark"
+                          defaultValue={storeCode}
+                          onMount={handleEditorMount}
+                          onChange={handleCodeChange}
+                          options={{
+                            fontSize: 14,
+                            minimap: { enabled: false },
+                            padding: { top: 16 },
+                            scrollBeyondLastLine: false,
+                            wordWrap: 'on',
+                            lineNumbers: 'on',
+                            renderWhitespace: 'none',
+                            tabSize: 2,
+                          }}
+                        />
+                      </div>
+                    </Panel>
+                  )}
+
+                  {editorVisible && previewVisible && <PanelResizeHandle className="panel-resize-handle--horizontal" />}
+                  
+                  {previewVisible && (
+                    <Panel minSize={20}>
+                      <LivePreview
+                        stdout={previewData.stdout}
+                        stderr={previewData.stderr}
+                        exitCode={previewData.exitCode}
+                        durationMs={previewData.durationMs}
+                        loading={runLoading}
+                        serverUrl={serverPort ? `http://localhost:${serverPort}` : undefined}
+                        onClose={() => setPreviewVisible(false)}
+                      />
+                    </Panel>
+                  )}
+                </PanelGroup>
+              </Panel>
+            )}
+            </PanelGroup>
+          </main>
+        </div>
       </div>
 
       {/* ── Node Context Menu ── */}
@@ -1109,6 +1374,13 @@ export default function App() {
         >
           {connTooltip.text}
         </div>
+      )}
+
+      {isImportOpen && (
+        <ImportModal
+          onClose={() => setIsImportOpen(false)}
+          onImport={handleImportCodebase}
+        />
       )}
     </div>
   )

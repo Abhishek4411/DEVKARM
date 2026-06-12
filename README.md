@@ -13,26 +13,185 @@ DEVKARM is an enterprise-grade visual programming environment built around **Tri
 
 ---
 
-## Quick Start (Frontend Only)
+## Getting Started
+
+### Prerequisites
+
+Install these before running DEVKARM:
+
+| Tool | Purpose | Install |
+|------|---------|---------|
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | PostgreSQL, Redis, Keycloak, MeiliSearch | Must be **running** before you start |
+| [Bun](https://bun.sh) v1.0+ | Frontend dev server + JS dependencies | `curl -fsSL https://bun.sh/install \| bash` |
+| [Node.js](https://nodejs.org/) v18+ | Sync + Sandbox services | Included with most setups |
+| [Rust](https://rustup.rs) (optional) | Rust API for project save/load | Only needed for full backend persistence |
+
+---
+
+### Option A — One-command startup (Windows, recommended)
+
+From the **project root** in PowerShell:
+
+```powershell
+.\scripts\dev-start.ps1
+```
+
+This script will:
+
+1. Start Docker services (`postgres`, `redis`, `keycloak`, `meilisearch`)
+2. Run database migrations
+3. Provision the Keycloak realm and test user
+4. Install JS dependencies (if needed)
+5. Start the Rust API, Sync server, Sandbox, and Web frontend
+6. Print the URLs and ports to open
+
+If a port is already in use, the script automatically picks the next free port:
+
+| Service | Default port | Fallback range |
+|---------|-------------|----------------|
+| Web (Vite) | 5173 | 5173–5199 |
+| Rust API | 3000 | 3000–3010 |
+| Sandbox | 4000 | 4000–4010 |
+| Sync (WebSocket) | 1234 | 1234–1244 |
+
+**Stop everything:**
+
+```powershell
+.\scripts\dev-stop.ps1
+```
+
+Logs are written to `.dev-logs/` in the project root.
+
+---
+
+### Option B — Manual startup (all platforms)
+
+#### Step 1 — Start Docker infrastructure
+
+Make sure Docker Desktop is running, then from the project root:
+
+```bash
+docker compose up -d
+```
+
+Wait until all containers are healthy (~30–60 seconds on first run).
+
+#### Step 2 — Provision Keycloak (first time only)
+
+**Windows (PowerShell):**
+
+```powershell
+.\scripts\setup-keycloak.ps1
+```
+
+**macOS / Linux / Git Bash:**
+
+```bash
+bash scripts/setup-keycloak.sh
+```
+
+> On Windows Git Bash, run with: `MSYS_NO_PATHCONV=1 bash scripts/setup-keycloak.sh`
+
+#### Step 3 — Create the API environment file (first time only)
+
+Create `apps/api/.env`:
+
+```
+DATABASE_URL=postgres://devkarm:devkarm_dev_password@localhost:5433/devkarm
+```
+
+#### Step 4 — Install dependencies
+
+```bash
+cd apps/web && bun install && cd ../..
+cd services/sync && bun install && cd ../..
+cd services/sandbox && bun install && cd ../..
+```
+
+#### Step 5 — Start each service (separate terminals)
+
+**Terminal 1 — Rust API:**
+
+```bash
+cd apps/api
+cargo run
+```
+
+**Terminal 2 — Sync server:**
+
+```bash
+cd services/sync
+node server.js
+```
+
+**Terminal 3 — Sandbox:**
+
+```bash
+cd services/sandbox
+node server.js
+```
+
+**Terminal 4 — Web frontend:**
 
 ```bash
 cd apps/web
-bun install
 bun run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+---
 
-> **Requirements:** [Bun](https://bun.sh) v1.0+.
+### Login credentials
 
-## Starting Backend Ecosystem
-DEVKARM now includes a powerful Rust API, real-time collaboration Sync server, Sandbox execution environment, and Keycloak Auth. Run them via:
-```bash
-docker-compose up -d
-cd apps/api && cargo run
-cd services/sync && bun run server.js
-cd services/sandbox && node server.js
-```
+When you open the app in your browser, you will be redirected to the Keycloak login page automatically.
+
+#### App login (use this to sign in to DEVKARM)
+
+| Field | Value |
+|-------|-------|
+| **Username** | `testuser` |
+| **Password** | `test123` |
+
+After signing in, you are redirected back to the DEVKARM IDE.
+
+#### Keycloak admin console (optional — for managing users/realm)
+
+| Field | Value |
+|-------|-------|
+| **URL** | [http://localhost:8080](http://localhost:8080) |
+| **Username** | `admin` |
+| **Password** | `admin` |
+| **Realm** | `devkarm` (select from the top-left dropdown after logging in) |
+
+> The admin account manages Keycloak itself. Use `testuser` / `test123` to use the IDE.
+
+---
+
+### Service URLs (default ports)
+
+After startup, open these in your browser:
+
+| Service | URL |
+|---------|-----|
+| **DEVKARM app** | [http://localhost:5173](http://localhost:5173) |
+| **Keycloak admin** | [http://localhost:8080](http://localhost:8080) |
+| **Rust API health check** | [http://localhost:3000/api/health](http://localhost:3000/api/health) |
+| **Sandbox** | [http://localhost:4000](http://localhost:4000) |
+| **MeiliSearch** | [http://localhost:7700](http://localhost:7700) |
+
+If the startup script picked a different port (because the default was busy), check the terminal output or `.dev-logs/pids.json` for the actual ports.
+
+---
+
+### Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| **"Authentication failed. Ensure Keycloak is running at localhost:8080"** | Start Docker Desktop, then run `docker compose up -d` and wait ~60 s for Keycloak to boot |
+| **Port already in use** | Run `.\scripts\dev-start.ps1` (Windows) — it picks the next free port automatically |
+| **Blank page / connection refused** | Check `.dev-logs/web.log` for the actual Vite port (may be 5174, 5175, etc.) |
+| **Sandbox unreachable** | Ensure Docker is running and `node server.js` is active in `services/sandbox` |
+| **Project save/load fails** | The Rust API must be running — run `cd apps/api && cargo run` |
+| **Rust build errors** | Reinstall the toolchain: visit [rustup.rs](https://rustup.rs), then `rustup default stable` |
 
 ---
 

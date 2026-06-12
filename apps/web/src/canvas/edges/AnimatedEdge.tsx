@@ -1,4 +1,4 @@
-import { BaseEdge, getBezierPath, type EdgeProps } from '@xyflow/react'
+import { BaseEdge, getBezierPath, EdgeLabelRenderer } from '@xyflow/react'
 
 /**
  * AnimatedEdge — a bezier edge with a travelling dot that shows data-flow direction.
@@ -9,17 +9,22 @@ import { BaseEdge, getBezierPath, type EdgeProps } from '@xyflow/react'
  * The edge stroke colour is inherited from the `style.stroke` prop (set per edge
  * in canvas-store) and falls back to the accent blue.
  */
-export default function AnimatedEdge({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  style,
-  selected,
-}: EdgeProps) {
+export default function AnimatedEdge(props: any) {
+  const {
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style,
+    selected,
+    label,
+    labelX,
+    labelY,
+  } = props
+
   const [edgePath] = getBezierPath({
     sourceX,
     sourceY,
@@ -44,7 +49,7 @@ export default function AnimatedEdge({
       <BaseEdge
         id={pathId}
         path={edgePath}
-        interactionWidth={20}
+        interactionWidth={25}
         style={{
           stroke: selected ? '#EF4444' : `${accent}66`,
           strokeWidth: selected ? 3 : 2,
@@ -90,6 +95,32 @@ export default function AnimatedEdge({
           <mpath href={`#${pathId}`} />
         </animateMotion>
       </circle>
+
+      {/* ── Label (for Inter-file dependencies) ── */}
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              background: '#0D0D14E6',
+              padding: '4px 8px',
+              borderRadius: 4,
+              fontSize: 10,
+              fontWeight: 600,
+              color: '#A78BFA',
+              fontFamily: 'JetBrains Mono, monospace',
+              pointerEvents: 'all',
+              border: '1px solid rgba(167, 139, 250, 0.2)',
+              whiteSpace: 'nowrap',
+              zIndex: 1000,
+            }}
+            className="nodrag nopan"
+          >
+            {label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
     </>
   )
 }

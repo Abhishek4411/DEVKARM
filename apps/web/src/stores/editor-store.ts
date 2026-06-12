@@ -3,6 +3,7 @@ import { initParser, parseCode } from '../lib/parser'
 import { codeToGraph } from '../canvas/sync/code-to-graph'
 import { useCanvasStore } from './canvas-store'
 import { useSyncStore } from './sync-store'
+import { useFileStore } from './file-store'
 
 export const DEFAULT_CODE = `// Start coding or drag nodes onto the canvas...\n`
 
@@ -16,8 +17,13 @@ export async function runSync(code: string) {
   try {
     await initParser()
     const tree = parseCode(code)
-    const { nodes, edges } = codeToGraph(tree)
+    const { nodes, edges, fileDependencies } = codeToGraph(tree)
     useCanvasStore.getState().syncFromCode(nodes, edges)
+    // Store parsed file dependencies for Project Graph Mode
+    const activeFileId = useFileStore.getState().activeFileId
+    if (activeFileId && fileDependencies.length > 0) {
+      useFileStore.getState().setFileDependencies(activeFileId, fileDependencies)
+    }
   } catch (err) {
     console.warn('[trinity-sync] parse failed:', err)
   } finally {

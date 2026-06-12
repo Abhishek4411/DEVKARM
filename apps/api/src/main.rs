@@ -8,7 +8,7 @@ use axum::{
     Router,
 };
 use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use auth::{new_jwks_cache, require_auth};
@@ -38,13 +38,15 @@ async fn main() {
 
     tracing::info!("Connected to database");
 
-    // CORS: allow localhost:5173 (Vite dev server)
+    // CORS: allow any localhost port (Vite may bind to 5173+ when ports are occupied)
     let cors = CorsLayer::new()
-        .allow_origin(
-            "http://localhost:5173"
-                .parse::<axum::http::HeaderValue>()
-                .unwrap(),
-        )
+        .allow_origin(AllowOrigin::predicate(
+            |origin: &axum::http::HeaderValue, _| {
+                origin.to_str().map_or(false, |o| {
+                    o.starts_with("http://localhost:") || o.starts_with("http://127.0.0.1:")
+                })
+            },
+        ))
         .allow_methods(Any)
         .allow_headers(Any);
 
@@ -105,6 +107,11 @@ async fn main() {
             get(routes::secrets::list_secrets).post(routes::secrets::create_secret),
         )
         .route("/api/secrets/{id}", delete(routes::secrets::delete_secret))
+        // Project Import
+        .route(
+            "/api/projects/{id}/import",
+            axum::routing::post(routes::import::import_codebase),
+        )
         // Apply JWT validation middleware to all routes above
         .layer(middleware::from_fn_with_state(
             jwks_cache.clone(),
@@ -118,8 +125,10 @@ async fn main() {
         .merge(protected)
         .layer(cors);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("DEVKARM API running on http://0.0.0.0:3000");
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = format!("0.0.0.0:{port}");
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    println!("DEVKARM API running on http://0.0.0.0:{port}");
     axum::serve(listener, app).await.unwrap();
 }
 

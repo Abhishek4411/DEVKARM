@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const SANDBOX_BASE = import.meta.env.VITE_SANDBOX_URL || 'http://localhost:4000';
 
 // Set by AuthProvider after Keycloak initialises so every request carries the token.
 let _getToken: (() => string | undefined) | null = null;

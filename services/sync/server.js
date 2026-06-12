@@ -64,8 +64,10 @@ async function getKeycloakPem() {
 }
 
 // ── HocusPocus server ─────────────────────────────────────────────────────────
+const SYNC_PORT = Number(process.env.PORT) || 1234
+
 const server = Server.configure({
-  port: 1234,
+  port: SYNC_PORT,
 
   /**
    * JWT validation — called before the WebSocket connection is fully established.
@@ -125,7 +127,7 @@ const server = Server.configure({
 })
 
 server.listen()
-console.log('[sync] HocusPocus server running on ws://localhost:1234')
+console.log(`[sync] HocusPocus server running on ws://localhost:${SYNC_PORT}`)
 if (process.env.SKIP_AUTH === 'true') {
   console.warn('[sync] ⚠️  SKIP_AUTH=true — JWT validation is DISABLED. Do not use in production.')
 } else {

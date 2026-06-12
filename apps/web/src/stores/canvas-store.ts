@@ -19,12 +19,23 @@ import type { PackageNodeType } from '../canvas/nodes/PackageNode'
 import type { DatabaseTableNodeType } from '../canvas/nodes/DatabaseTableNode'
 import type { BugNodeType } from '../canvas/nodes/BugNode'
 import type { SecretNodeType } from '../canvas/nodes/SecretNode'
+import type { FileRegionNodeType } from '../canvas/nodes/FileRegionNode'
 // sync-store has no local imports so it is safe to import directly (no circular dep)
 import { useSyncStore } from './sync-store'
 // collab.ts has no local imports — safe to import statically
 import { isCollabActive, getDoc, getYNodes, getYEdges } from '../lib/collab'
 
-export type AppNode = FunctionNodeType | VariableNodeType | ApiNodeType | ConditionNodeType | LoopNodeType | TryCatchNodeType | CommentNodeType | PackageNodeType | DatabaseTableNodeType | BugNodeType | SecretNodeType
+// ── Inter-file edge: connects nodes across different files ────────────────────
+export interface InterFileEdge extends Edge {
+  data: {
+    sourceFileId: string
+    targetFileId: string
+    importedSymbol: string
+    fromPath: string
+  }
+}
+
+export type AppNode = FunctionNodeType | VariableNodeType | ApiNodeType | ConditionNodeType | LoopNodeType | TryCatchNodeType | CommentNodeType | PackageNodeType | DatabaseTableNodeType | BugNodeType | SecretNodeType | FileRegionNodeType
 
 // ── Lazy import for editor-store (avoids circular dep: editor-store → canvas-store) ──
 function getEditorStore() {
@@ -203,6 +214,10 @@ interface CanvasState {
   dirty: boolean
   currentProjectId: string | null
   currentFileId: string | null
+  /** Project Graph Mode: render all files on one unified canvas */
+  isProjectGraphMode: boolean
+  /** Cross-file edges used in Project Graph Mode */
+  interFileEdges: InterFileEdge[]
   onNodesChange: OnNodesChange<AppNode>
   onEdgesChange: OnEdgesChange
   onConnect: OnConnect
@@ -210,6 +225,8 @@ interface CanvasState {
   loadCanvas: (nodes: AppNode[], edges: Edge[]) => void
   setCurrentProject: (id: string) => void
   setCurrentFile: (id: string | null) => void
+  setProjectGraphMode: (on: boolean) => void
+  setInterFileEdges: (edges: InterFileEdge[]) => void
   saveToBackend: () => Promise<void>
   updateNodeData: (id: string, data: Partial<AppNode['data']>) => void
   addNode: (node: AppNode) => void
@@ -227,6 +244,8 @@ export const useCanvasStore = create<CanvasState>()((set, get) => ({
   dirty: false,
   currentProjectId: null,
   currentFileId: null,
+  isProjectGraphMode: false,
+  interFileEdges: [],
 
   onNodesChange: (changes) => {
     set((state) => ({ nodes: applyNodeChanges(changes, state.nodes) }))
@@ -308,8 +327,18 @@ export const useCanvasStore = create<CanvasState>()((set, get) => ({
   // Called when the active file tab changes.
   setCurrentFile: (id) => set({ currentFileId: id }),
 
+  // Toggle Project Graph Mode (unified multi-file view).
+  setProjectGraphMode: (on) => set({ isProjectGraphMode: on }),
+
+  // Set inter-file edges for Project Graph Mode.
+  setInterFileEdges: (edges) => set({ interFileEdges: edges }),
+
   // Batch upsert: DELETE all for project, then re-INSERT with preserved IDs.
   saveToBackend: async () => {
+    // NEVER save the virtual Project Graph — it contains FileRegionNodes and
+    // InterFileEdges that are not real file data. The DB rejects them (422).
+    if (get().isProjectGraphMode) return
+
     const { nodes, edges, currentProjectId } = get()
     if (!currentProjectId) return
 
@@ -385,7 +414,9 @@ export const useCanvasStore = create<CanvasState>()((set, get) => ({
       dirty: true,
     })),
 
-  // Called by App.tsx onDelete (keyboard Delete/Backspace) after React Flow has
-  // already applied the deletion to its internal state via onNodesChange.
-  triggerGraphToCode: () => triggerGraphToCode(get().nodes, get().edges),
+  /** Exposed so App.tsx's onDelete handler can regenerate code after keyboard deletion. */
+  triggerGraphToCode: () => {
+    if (get().isProjectGraphMode) return
+    triggerGraphToCode(get().nodes, get().edges)
+  },
 }))

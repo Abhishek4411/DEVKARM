@@ -1,4 +1,4 @@
-import { FunctionSquare, Variable, Globe, GitBranch, Repeat, ShieldAlert, MessageSquare, Database, Bug, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FunctionSquare, Variable, Globe, GitBranch, Repeat, ShieldAlert, MessageSquare, Database, Bug } from 'lucide-react'
 import './ComponentPalette.css'
 
 export type PaletteNodeType = 'functionNode' | 'variableNode' | 'apiNode' | 'conditionNode' | 'loopNode' | 'tryCatchNode' | 'commentNode' | 'packageNode' | 'databaseTableNode' | 'bugNode'
@@ -77,10 +77,9 @@ const ITEMS: {
 
 interface Props {
   expanded: boolean
-  onToggle: () => void
 }
 
-export default function ComponentPalette({ expanded, onToggle }: Props) {
+export default function ComponentPalette({ expanded }: Props) {
   function onDragStart(e: React.DragEvent, type: PaletteNodeType) {
     e.dataTransfer.setData('application/devkarm-node-type', type)
     e.dataTransfer.effectAllowed = 'copy'
@@ -97,11 +96,6 @@ export default function ComponentPalette({ expanded, onToggle }: Props) {
 
   return (
     <aside className={`sidebar${expanded ? ' sidebar--expanded' : ''}`}>
-      {/* ── Collapse toggle ── */}
-      <button className="sidebar-toggle" onClick={onToggle} title={expanded ? 'Collapse' : 'Expand'}>
-        {expanded ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-      </button>
-
       {expanded ? (
         /* ── Expanded: component palette ── */
         <div className="palette">

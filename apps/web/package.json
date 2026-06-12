@@ -25,6 +25,7 @@
     "lucide-react": "^1.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-resizable-panels": "^4.9.0",
     "tree-sitter-javascript": "^0.25.0",
     "web-tree-sitter": "^0.26.8",
     "yjs": "^13.6.30",

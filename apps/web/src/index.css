@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* ── DEVKARM Design Tokens ── */
@@ -37,6 +38,11 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
   min-width: 900px;
+  font-family: 'Inter', sans-serif;
+}
+
+code, textarea, .monaco-editor, .react-flow__node {
+  font-family: 'Fira Code', monospace;
 }
 
 /* Scrollbar theming for the app */
@@ -48,4 +54,31 @@ html, body, #root {
 /* Smooth organic layout transitions */
 .react-flow__node {
   transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Resizable panel drag handles */
+.panel-resize-handle {
+  width: 4px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: col-resize;
+  position: relative;
+  z-index: 10;
+}
+.panel-resize-handle:hover,
+.panel-resize-handle[data-resize-handle-state="drag"] {
+  background-color: var(--accent-blue);
+}
+
+.panel-resize-handle--horizontal {
+  height: 4px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: row-resize;
+  position: relative;
+  z-index: 10;
+}
+.panel-resize-handle--horizontal:hover,
+.panel-resize-handle--horizontal[data-resize-handle-state="drag"] {
+  background-color: var(--accent-blue);
 }
